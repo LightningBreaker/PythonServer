@@ -10,6 +10,9 @@ class AgentBlue(models.Model):
     health=models.FloatField(verbose_name="生命值")
     type=models.TextField(verbose_name="装备类型")
     weapon=models.FloatField(verbose_name="",default=1)
+    point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
+
+
 
 
 
@@ -20,6 +23,7 @@ class AgentRed(models.Model):
     health = models.FloatField(verbose_name="生命值")
     type = models.TextField(verbose_name="装备类型")
     weapon = models.FloatField(verbose_name="", default=1)
+    point3d=models.ForeignKey('Point3D',on_delete=models.CASCADE,null=True,blank=True)
 
 class NumberCapture(models.Model):
     totalRed=models.IntegerField(verbose_name="红方总数",default=0)
@@ -37,6 +41,7 @@ class EnemyTargetOfBlue(models.Model):
     type = models.TextField(verbose_name="装备类型")
     weapon = models.FloatField(verbose_name="武器杀伤力", default=1)
     isVisible=models.BooleanField(verbose_name="是否从视野中消失")
+    point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
 
 #存储被红方检测到的蓝方敌人
 class EnemyTargetOfRed(models.Model):
@@ -47,12 +52,14 @@ class EnemyTargetOfRed(models.Model):
     type = models.TextField(verbose_name="装备类型")
     weapon = models.FloatField(verbose_name="武器杀伤力", default=1)
     isVisible = models.BooleanField(verbose_name="是否从视野中消失")
+    point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
 
 class BuildingTarget(models.Model):
     vid=models.IntegerField(verbose_name="设备唯一编号",unique=True)
     x = models.IntegerField(verbose_name="x坐标值")
     y = models.IntegerField(verbose_name="y坐标值")
     values=models.FloatField(verbose_name="夺控地点价值",default=1)
+    point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
 
 
 class ObstacleTarget(models.Model):
@@ -60,6 +67,7 @@ class ObstacleTarget(models.Model):
     x = models.IntegerField(verbose_name="x坐标值")
     y = models.IntegerField(verbose_name="y坐标值")
     health = models.FloatField(verbose_name="生命值")
+    point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
 
 class RootMap(models.Model):
     vid=models.IntegerField(verbose_name="地图唯一编号,C#中通过枚举变量获取",unique=True)
@@ -73,13 +81,53 @@ class RootMap(models.Model):
     local_path=models.TextField(verbose_name='地图s所对应的文件夹')
     base_height=models.FloatField(verbose_name='起始高',default=0)
 
+    # in_out_points=models.ManyToManyField('Point3D',null=True,blank=True)
+
+
+
 class Apartment(models.Model):
   root_map=models.ForeignKey(RootMap,on_delete=models.CASCADE)
   floor=models.IntegerField(verbose_name='层数')
   file_name=models.TextField(verbose_name='目标地图名称')
   height_floor=models.FloatField(verbose_name='楼层高度下界',default=0)
   height_ceil=models.FloatField(verbose_name='楼层高度上界',default=1)
+  height_upper=models.FloatField(verbose_name='小于该值则属于该楼层')
+  up_points = models.ManyToManyField('Point3D', null=True, blank=True,related_name='down_apartments')
+  down_points=models.ManyToManyField('Point3D', null=True, blank=True,related_name='up_apartments')
   class Meta:
       unique_together=("root_map","floor")
+
+class Point3D(models.Model):
+    #编号形式为ABXXX,A是地图编号，B是楼层编号，XXX是 Hospital编号暂且定义为：21999
+    vid=models.IntegerField(verbose_name='point3d唯一编号',blank=True,null=True,unique=True)
+
+    is_in_map=models.BooleanField(verbose_name='是否在地图中',default=True)
+    self_apartment=models.ForeignKey(Apartment,on_delete=models.CASCADE,related_name='self_point_set')
+
+    is_up_point_of_apartment=models.BooleanField(verbose_name='是否是上楼点',default=False)
+    is_down_point_of_apartment=models.BooleanField(verbose_name='是否是上楼点',default=False)
+    #if is_junction=true
+    is_junction=models.BooleanField(verbose_name='是否为连接点')
+    connected_apartment = models.ForeignKey(Apartment, null=True, blank=True, on_delete=models.CASCADE,related_name='connected_point_set')
+
+    up_point=models.ForeignKey('self',null=True,blank=True,on_delete=models.CASCADE,related_name='down_point_set')
+    down_point=models.ForeignKey('self',null=True,blank=True,on_delete=models.CASCADE,related_name='up_point_set')
+
+    #if is_in_map=false
+    float_x = models.FloatField(verbose_name='3D坐标x', blank=True, null=True)
+
+    float_z = models.FloatField(verbose_name='3D坐标z', blank=True, null=True)
+
+    #都要有
+    float_height = models.FloatField(verbose_name='3D坐标y', blank=True, null=True)
+    #if is_in_map=true
+    int_x=models.IntegerField(verbose_name='所对应apartment中的点x',blank=True, null=True)
+    int_y=models.IntegerField(verbose_name='所对应的apartment中的点y',blank=True, null=True)
+
+    agent_vid=models.IntegerField(verbose_name='假设是agent的位置，则传入agent的id',default=-1)
+
+    is_static=models.BooleanField(verbose_name='是否为静态的点',default=True)
+    class Meta:
+        unique_together = ("float_x", "float_height","float_z",'agent_vid')
 
 

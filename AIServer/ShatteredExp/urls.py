@@ -13,6 +13,7 @@ urlpatterns = [
     path('initializeMap/',views.initializeMap,name='initializeMap'),
     path('gameOverTest/',views.gameOverTest,name='gameOverTest'),
     path('updateMapData/',views.updateMapData,name='updateMapData'),
-    path('updateApartmentData/',views.updateApartmentData,name='updateApartmentData')
+    path('updateApartmentData/',views.updateApartmentData,name='updateApartmentData'),
+    path('updateDestinationTest/',views.updateDestinationTest,name='updateDestinationTest'),
 ]
 
