@@ -48,7 +48,7 @@ hospital_map_params={"vid":2,
                   'base_height':0.6,}
 
 
-#To Do
+
 fz1_map_params={"vid":3,
                    'name':'fz1Map',
                   'start_pos_x':-68,
@@ -441,7 +441,7 @@ point_hostpital_floor_1_stair_1={'self_root_map_vid':2,
                         'float_z':64.8,
                         'float_height':1.5,
                         'agent_vid':-1}
-#TODO
+
 point_hostpital_floor_1_stair_2={'self_root_map_vid':2,
                         'self_floor':1,
                         'is_up_point_of_apartment':False,
@@ -494,7 +494,7 @@ point_hostpital_floor_1_stair_4 = {'self_root_map_vid': 2,
                                    'vid': 21006,
                                    }
 
-# TODO
+
 point_hostpital_floor_1_stair_5 = {'self_root_map_vid': 2,
                                    'self_floor': 1,
                                    'is_up_point_of_apartment': False,
@@ -530,7 +530,7 @@ point_hostpital_floor_1_stair_6 = {'self_root_map_vid': 2,
                                    'vid': 21008,
                                    }
 
-#TODO 二楼
+
 point_hostpital_floor_2_stair_down = {'self_root_map_vid': 2,
                                    'self_floor': 2,
                                    'is_up_point_of_apartment': False,
