@@ -5,19 +5,25 @@ from  django.http import  JsonResponse
 from django.db.models import Q
 
 # Create your views here.
-from  AIServer.ShatteredExp.params import *
-from AIServer.rules_project.main import  make_decision
-from  AIServer.rules_project.param import *
-from  AIServer.rules_project.param import Map_Length,Map_Width
-from AIServer.ShatteredExp.models import *
-from  AIServer.ShatteredExp.destination_transformer import *
+# from  AIServer.ShatteredExp.params import *
+# from AIServer.rules_project.main import  make_decision
+# from  AIServer.rules_project.param import *
+# from  AIServer.rules_project.param import Map_Length,Map_Width
+# from AIServer.ShatteredExp.models import *
+# from  AIServer.ShatteredExp.destination_transformer import *
+
+from  .fz1_params import *
+from  .fz3_params import *
+from  .fz2_params import *
+from  .hospital_params import *
+from .utils import *
 from django.db import IntegrityError
-# from  ShatteredExp.params import *
-# from rules_project.main import  make_decision
-# from  rules_project.param import *
-# from  rules_project.param import Map_Length,Map_Width
-# from ShatteredExp.models import *
-# from  ShatteredExp.destination_transformer import *
+from  .params import *
+from rules_project.main import  make_decision
+from  rules_project.param import *
+from  rules_project.param import Map_Length,Map_Width
+from .models import *
+from  .destination_transformer import *
 min_enemy=0
 min_building=1
 min_obstacles=0
@@ -62,6 +68,20 @@ def updateAgent(request,*args,**kwargs):
     float_z=float((request.POST.get('float_z')))
     rootmap_vid=int((request.POST.get('rootmap_vid')))
     apartment_floor=int((request.POST.get('apartment_floor')))
+    server_force_type=int((request.POST.get('serverForceType')))
+    is_controlled_by_ai=True if int(request.POST.get('isControlledByAi'))==1 else False
+    is_human_target_changed=True if int(request.POST.get('is_human_target_changed'))==1 else False
+    human_target_vid=int(request.POST.get('human_target_vid'))
+    if human_target_vid!=-1:
+        humanTarget_set=BuildingTarget.objects.filter(is_static=0).filter(vid=human_target_vid)
+        if len(humanTarget_set)>0:
+            humanTarget=humanTarget_set.first()
+        else:
+            humanTarget=None
+    else:
+        humanTarget=None
+   # print('is_controlled_by_ai'+str(is_controlled_by_ai))
+    equipment_type=servertype_2_equip_type(server_force_type)
    # print('rootmap_vid:'+str(rootmap_vid)+' floor'+str(apartment_floor))
     agent_vid=vid
     point3d= updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid)
@@ -73,9 +93,9 @@ def updateAgent(request,*args,**kwargs):
         agent=AgentBlue.objects.filter(vid=vid)
 
     if agent.count()>0:
-        updateAgentLocal(agent.first(),x,y,health,point3d)
+        updateAgentLocal(agent.first(),x,y,health,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget)
     else:
-        addAgent(whichteam,vid,x,y,health,type,weapon,point3d)
+        addAgent(whichteam,vid,x,y,health,type,weapon,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget)
 
 
     current_count= Agent.objects.all().count()
@@ -87,6 +107,36 @@ def updateAgent(request,*args,**kwargs):
         isOk=False
 
     return  json_response(data,isOk)
+
+from django.core.exceptions import ObjectDoesNotExist
+# def updateHumanTarget(request,*args,**kwargs):
+#     agent_vid=int(request.POST.get('vid'))
+#     vid=agent_vid+HUMAN_TARGET_BIAS
+#     whichTeam=int((request.POST.get('whichTeam')))
+#     human_target_x=float(request.POST.get('human_target_x'))
+#     human_target_z=float(request.POST.get('human_target_z'))
+#     human_target_height=float(request.POST.get('human_target_height'))
+#     rootmap_vid = int((request.POST.get('rootmap_vid')))
+#     apartment_floor = int((request.POST.get('apartment_floor')))
+#
+#     point3d = updateDynamicPoint3D(human_target_x, human_target_height, human_target_z, rootmap_vid, apartment_floor, vid)
+#
+#     humanTargets = HumanTarget.objects.filter(vid=vid)
+#
+#     if len(humanTargets) > 0:
+#         updateHumanTargetLocal(humanTargets.first(), human_target_x, human_target_z, human_target_height, point3d)
+#     else:
+#         try:
+#             addHumanTarget(agent_vid,vid,whichTeam, human_target_x,human_target_z,human_target_height,point3d)
+#         except IntegrityError as e:
+#             pass
+#     data = dict()
+#     return json_response(data)
+
+
+
+
+
 
 def updateEnemyTarget(request,*args,**kwargs):
     vid = int(request.POST.get('vid'))
@@ -103,7 +153,17 @@ def updateEnemyTarget(request,*args,**kwargs):
     float_z = float((request.POST.get('float_z')))
     rootmap_vid = int((request.POST.get('rootmap_vid')))
     apartment_floor = int((request.POST.get('apartment_floor')))
+    server_force_type = int((request.POST.get('serverForceType')))
+    equipment_type = servertype_2_equip_type(server_force_type)
+    if equipment_type==AIR_FIRE or equipment_type==AIR_DETECT or float_height>=60:
+        pos_type=AIR_POS
+    elif rootmap_vid==1:
+        pos_type=OUTDOOR_POS
+    else:
+        pos_type=INDOOR_POS
+
     agent_vid = vid
+  #  print('UpdateEnemy~~~~~~~~~~~~~~~~~~~~~~~~~~:float x:'+str(float_x)+' float height:'+str(float_height)+' z:' +str(float_z))
     point3d = updateDynamicPoint3D( float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid)
     if whichteam==0:
         EnemyTarget=EnemyTargetOfBlue
@@ -113,10 +173,10 @@ def updateEnemyTarget(request,*args,**kwargs):
     enemyTarget= EnemyTarget.objects.filter(vid=vid)
 
     if len(enemyTarget) >0:
-        updateEnemyTargetLocal(enemyTarget.first(),x,y,health,isVisible,point3d)
+        updateEnemyTargetLocal(enemyTarget.first(),x,y,health,isVisible,point3d,pos_type)
     else:
         try:
-            addEnemyTarget(EnemyTarget,vid,x,y,health,type,weapon,whichteam,isVisible,point3d)
+            addEnemyTarget(EnemyTarget,vid,x,y,health,type,weapon,whichteam,isVisible,point3d,equipment_type,pos_type)
         except IntegrityError as e:
             pass
     data=dict()
@@ -158,36 +218,25 @@ def updateBuildingTarget(request,*args,**kwargs):
    float_z = float((request.POST.get('float_z')))
    rootmap_vid = int((request.POST.get('rootmap_vid')))
    apartment_floor = int((request.POST.get('apartment_floor')))
+   capture_type=int((request.POST.get('capture_type')))
+   is_static=True if int((request.POST.get('is_static')))==1 else False
+
    agent_vid = vid
    point3d = updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid)
 
-   buildingTarget=BuildingTarget.objects.filter(vid=vid)
+   buildingTarget=BuildingTarget.objects.filter(vid=vid).filter(is_static=is_static)
    if buildingTarget.count()>0:
        pass
    else:
        try:
-            addBuildingTarget(vid,x,y,value,point3d)
+            addBuildingTarget(vid,x,y,value,point3d,capture_type,is_static)
        except IntegrityError as e:
            pass
 
    return json_response(dict())
 
 
-def updateDestination(request,*args,**kwargs):
-    totalNums=int(request.POST.get('totalNums'))
-    whichTeam=int(request.POST.get('whichTeam'))
-    if whichTeam==0:
-        Agent=AgentRed
-    else:
-        Agent=AgentBlue
-    current_count=Agent.objects.all().count()
-    if totalNums==current_count:
-        data,isOk=updateDestinationLocal(whichTeam)
 
-    else:
-        data=dict()
-        isOk=False
-    return json_response(data,isOk)
 def updateDestinationSingle(request,*args,**kwargs):
     pass
 def updateDestinationTest(request,*args,**kwargs):
@@ -214,35 +263,12 @@ def updateDestinationTest(request,*args,**kwargs):
         isOk=False
         for agent,target_destination in zip(agent_list,building_list):
             agent_dict=dict()
-            isOk,is_in_map,point3d= transform_destination(whichTeam,agent.vid,target_destination.vid,enemytarget_list,obstacle_list,building_list)
-            print('get_vid:'+str(point3d.vid)+'--------------------------------')
+            isOk,is_in_map,point3d,my_agent= transform_destination(whichTeam,agent.vid,target_destination.vid,enemytarget_list,obstacle_list,building_list,agent_list)
+         #   print('get_vid:'+str(point3d.vid)+'--------------------------------')
             if isOk == False:
                 print('######################################## okok2')
                 break
-            agent_dict['vid']=agent.vid
-            agent_dict['float_x']=point3d.float_x
-            agent_dict['float_z']=point3d.float_z
-            agent_dict['float_height']=point3d.float_height
-            if point3d.vid!=None or point3d.vid!=-1:
-                    if point3d.self_apartment.root_map.vid != agent.point3d.self_apartment.root_map.vid \
-                        or not is_in_map or not point3d.is_in_map:
-                        agent_dict['is_in_map'] = False
-                    else:
-                        agent_dict['is_in_map'] = True
-            else:
-                agent_dict['is_in_map']=False
-            agent_dict['root_map_id']=point3d.self_apartment.root_map.vid
-            #改进一下A *
-            if point3d.self_apartment.root_map.vid==1 and  (point3d.int_y <= 73 and agent.y>=87) or (point3d.int_y>=87 and agent.y<=73):
-                agent_dict['int_x'] = A_STAR_MIDDLE_X
-                agent_dict['int_y'] = A_STAR_MIDDLE_Y
-            elif point3d.self_apartment.root_map.vid==1 and (point3d.int_y <= 54 and agent.y>=60) or (point3d.int_y>=60 and agent.y<=54):
-                agent_dict['int_x'] = A_STAR_LEFT_X
-                agent_dict['int_y'] = A_STAR_LEFT_Y
-            else:
-                agent_dict['int_x'] = point3d.int_x
-                agent_dict['int_y'] = point3d.int_y
-            agent_dict['floor']=point3d.self_apartment.floor
+            agent_dict=get_agent_dict(agent.vid,is_in_map,point3d,my_agent)
 
             data.append(agent_dict)
 
@@ -255,6 +281,24 @@ def updateDestinationTest(request,*args,**kwargs):
         data=list()
         isOk=False
     return json_response(data,isOk)
+
+def updateDestination(request,*args,**kwargs):
+    totalNums=int(request.POST.get('totalNums'))
+    whichTeam=int(request.POST.get('whichTeam'))
+    if whichTeam==0:
+        Agent=AgentRed
+    else:
+        Agent=AgentBlue
+    current_count=Agent.objects.all().count()
+ #   print('##################################### UpdateDestination')
+    if totalNums==current_count:
+        data,isOk=updateDestinationLocal(whichTeam)
+
+    else:
+        data=dict()
+        isOk=False
+    return json_response(data,isOk)
+
 ###############################以上是pythonServer调用
 def updateDestinationLocal(whichTeam):
     if whichTeam==0:
@@ -263,76 +307,195 @@ def updateDestinationLocal(whichTeam):
     else:
         Agent=AgentBlue
         EnemyTarget=EnemyTargetOfBlue
+    ai_or_human=len(Agent.objects.filter(isControlledByAi=True))
+    data=list()
+    if  ai_or_human>0: #ai
 
-    agent_list=list(Agent.objects.all())
-    enemytarget_list=list(EnemyTarget.objects.all().filter(isVisible__exact=True))
-    obstacle_list=list(ObstacleTarget.objects.all())
-    building_list=list(BuildingTarget.objects.all())
+        agent_list=list(Agent.objects.all().filter(isControlledByAi=True))
+        enemytarget_list=list(EnemyTarget.objects.all().filter(isVisible__exact=True))
+        obstacle_list=list(ObstacleTarget.objects.all())
+        building_list=list(BuildingTarget.objects.all().filter(is_static=1))
 
-    agent_pos_ls=list()
-    visible_enemy_pos_ls=list()
-    building_target_ls=list()
-    obstacle_target_ls=list()
-    enemy_target_ls=list()
-    agent_ls=list()
+        agent_pos_ls, visible_enemy_pos_ls, building_target_ls,\
+        obstacle_target_ls, enemy_target_ls, agent_ls,sorted_building_list=data_process(agent_list,enemytarget_list,obstacle_list,building_list)
+        isOk = False
+        if len(building_target_ls) > 0:
+            isOk, data = ShatteredAlg(whichTeam, agent_pos_ls, visible_enemy_pos_ls,
+                                      building_target_ls, obstacle_target_ls, enemy_target_ls, agent_ls,
+                                      enemytarget_list, obstacle_list, building_list, agent_list, [])
+
+    else:
+       # agent_list_iter = Agent.objects.all().filter(isControlledByAi=False).filter(is_human_target_changed=1)
+        enemytarget_list = list(EnemyTarget.objects.all().filter(isVisible__exact=True))
+        obstacle_list = list(ObstacleTarget.objects.all())
+        building_list = list(BuildingTarget.objects.all().filter(is_static=0))
+        agent_pos_ls, visible_enemy_pos_ls, building_target_ls, \
+        obstacle_target_ls, enemy_target_ls, agent_ls,sorted_building_list = data_process([], enemytarget_list, obstacle_list,
+                                                                     building_list)
+        isOk = False
+        data=list()
+        for building_target,building in zip(building_target_ls,sorted_building_list):
+            if whichTeam==0: # REd
+                agent_list=list(building.agent_red_set.all())
+                agent_pos_ls,agent_ls=agent_process(agent_list)
+            else:
+                agent_list=list(building.agent_blue_set.all())
+                agent_pos_ls, agent_ls = agent_process(agent_list)
+            isOk, data_part = ShatteredAlg(whichTeam, agent_pos_ls, visible_enemy_pos_ls,
+                                      [building_target], obstacle_target_ls, enemy_target_ls, agent_ls,
+                                      enemytarget_list, obstacle_list, building_list, agent_list, [])
+            if isOk:
+                data+=data_part
+
+
+
+
+    return data, isOk
+
+def agent_process(agent_list):
+    agent_pos_ls = list()
+    agent_ls = list()
     for agent in agent_list:
-        if agent.health<=0:
+        if agent.health <= 0:
             continue
-        if agent.x<0 or agent.x>=Map_Width or agent.y<0 or agent.y>=Map_Length:
+        if agent.x < 0 or agent.x >= Map_Width or agent.y < 0 or agent.y >= Map_Length:
             continue
-        agent_pos_ls.append([agent.x,agent.y])
-        agent_ls.append([agent.vid,agent.x,agent.y,agent.health,name_map[agent.type],agent.weapon])
+        if not agent.isControlledByAi:
+            # agent_human_ls.append([agent.vid])
+            continue
+        agent_pos_ls.append([agent.x, agent.y])
+        agent_ls.append(
+            [equipment_type_2_int[agent.equipment_type], agent.vid, agent.x, agent.y, agent.vid, agent.health,
+             name_map[agent.type], agent.weapon])
+    return  agent_pos_ls,agent_ls
+def data_process(agent_list,enemytarget_list,obstacle_list,building_list):
+    agent_pos_ls = list()
+    visible_enemy_pos_ls = list()
+    building_target_ls = list()
+    obstacle_target_ls = list()
+    enemy_target_ls = list()
+    agent_ls = list()
+    sorted_building_list=list()
+    # agent_human_ls=list()
+    agent_pos_ls,agent_ls=agent_process(agent_list)
 
     for enemy_target in enemytarget_list:
-        if enemy_target.health<=0:
+        if enemy_target.health <= 0:
             continue
-        if enemy_target.x<0 or enemy_target.y<0 or enemy_target.x>=Map_Width or enemy_target.y>=Map_Length:
+        if enemy_target.x < 0 or enemy_target.y < 0 or enemy_target.x >= Map_Width or enemy_target.y >= Map_Length:
             continue
-        visible_enemy_pos_ls.append([enemy_target.x,enemy_target.y])
-        enemy_target_ls.append([enemy_target.vid,enemy_target.x,enemy_target.y,enemy_target.health,name_map[enemy_target.type],enemy_target.weapon])
+        visible_enemy_pos_ls.append([enemy_target.x, enemy_target.y])
+        enemy_target_ls.append(
+            [pos_type_2_int[enemy_target.pos_type], enemy_target.vid, enemy_target.x, enemy_target.y, enemy_target.vid,
+             enemy_target.health, name_map[enemy_target.type], enemy_target.weapon])
 
     for obstacle in obstacle_list:
-        if obstacle.health<=0:
+        if obstacle.health <= 0:
             continue
-        if obstacle.x<0 or obstacle.y<0 or obstacle.x>=Map_Width or obstacle.y>=Map_Length:
+        if obstacle.x < 0 or obstacle.y < 0 or obstacle.x >= Map_Width or obstacle.y >= Map_Length:
             continue
-        obstacle_target_ls.append([obstacle.x,obstacle.y,obstacle.health])
+        obstacle_target_ls.append([obstacle.x, obstacle.y, obstacle.vid, obstacle.health])
 
     for building in building_list:
 
-        if building.x<0 or building.y<0 or building.x>=Map_Width or building.y>=Map_Length:
+        if building.x < 0 or building.y < 0 or building.x >= Map_Width or building.y >= Map_Length:
             continue
-        building_target_ls.append([building.x,building.y])
+        # print('capture type is:'+capture_type_2_int[building.capture_type])
+        building_target_ls.append([capture_type_2_int[building.capture_type], building.x, building.y, building.vid])
+        sorted_building_list.append(building)
+    return agent_pos_ls,visible_enemy_pos_ls,building_target_ls,obstacle_target_ls,enemy_target_ls,agent_ls,sorted_building_list
 
 
-    data=list()
+def get_agent_dict(vid,is_in_map,point3d,my_agent):
+    agent_dict=dict()
+    agent_dict['vid'] =vid
+    agent_dict['float_x'] = point3d.float_x
+    agent_dict['float_z'] = point3d.float_z
+    agent_dict['float_height'] = point3d.float_height
+    if point3d.vid != None or point3d.vid != -1:
+        if point3d.self_apartment.root_map.vid != my_agent.point3d.self_apartment.root_map.vid \
+                or not is_in_map or not point3d.is_in_map:
+            agent_dict['is_in_map'] = False
+        else:
+            agent_dict['is_in_map'] = True
+    else:
+        agent_dict['is_in_map'] = False
+    agent_dict['root_map_id'] = point3d.self_apartment.root_map.vid
+    # 改进一下A *
+    if point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 73 and my_agent.y >= 87) or (
+            point3d.int_y >= 87 and my_agent.y <= 73):
+        agent_dict['int_x'] = A_STAR_MIDDLE_X
+        agent_dict['int_y'] = A_STAR_MIDDLE_Y
+    elif point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 54 and my_agent.y >= 60) or (
+            point3d.int_y >= 60 and my_agent.y <= 54):
+        agent_dict['int_x'] = A_STAR_LEFT_X
+        agent_dict['int_y'] = A_STAR_LEFT_Y
+    elif point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 26 and my_agent.y >= 35) or (
+            point3d.int_y >= 35 and my_agent.y <= 26):
+        agent_dict['int_x'] = A_STAR_LEFT_2_X
+        agent_dict['int_y'] = A_STAR_LEFT_2_Y
 
-    isOk=False
-    if len(building_target_ls)>0:
-        data=ShatteredAlg(agent_pos_ls,visible_enemy_pos_ls,building_target_ls,obstacle_target_ls,enemy_target_ls,agent_ls)
-        isOk=True
+    else:
+        agent_dict['int_x'] = point3d.int_x
+        agent_dict['int_y'] = point3d.int_y
+    agent_dict['floor'] = point3d.self_apartment.floor
 
-
-    return  data,isOk
+    return agent_dict
 
 ###############智能体的代码在这里添加
-def ShatteredAlg(agent_pos_ls,visible_enemy_pos_ls,building_target_ls,obstacle_target_ls,enemy_target_ls,agent_ls):
+def ShatteredAlg(whichTeam,agent_pos_ls,visible_enemy_pos_ls,building_target_ls,obstacle_target_ls,\
+                 enemy_target_ls,agent_ls,enemytarget_list,obstacle_list,building_list,my_agent_list,human_target_list):
     destinations=list()
-    dest_ls=make_decision(agent_pos_ls,visible_enemy_pos_ls,agent_ls,building_target_ls,obstacle_target_ls,enemy_target_ls)
-    for agent in dest_ls:
-        agent_unit= dict()
-        agent_unit['vid']=agent[0]
-        agent_unit['x']=agent[1]
-        agent_unit['y']=agent[2]
-        destinations.append(agent_unit)
+    isOk=True
+    if len(agent_pos_ls)>0:
+        dest_ls=make_decision(agent_pos_ls,visible_enemy_pos_ls,agent_ls,building_target_ls,obstacle_target_ls,enemy_target_ls)
+        for agent in dest_ls:
+            agent_dict = dict()
+            print(' agent vid:'+str(agent[0])+' target vid:'+str(agent[3]))
+            try:
+                isOk, is_in_map, point3d,my_agent = transform_destination(whichTeam, agent[0], agent[3], enemytarget_list,
+                                                             obstacle_list, building_list,my_agent_list)
+                # print('get_vid:' + str(point3d.vid) + '--------------------------------')
+                if isOk == False:
+                    #   print('######################################## okok2')
+                    break
+                agent_dict=get_agent_dict(agent[0],is_in_map,point3d,my_agent)
+                destinations.append(agent_dict)
+            except Point3D.DoesNotExist:
+                print('Error agent:id' + str(agent[0]) + ' agent vid:' + str(agent[3]))
+                isOk=False
+                break
 
-    return destinations
 
 
-def updateEnemyTargetLocal(enemyTarget,x,y,health,isVisible,point3d):
+    if isOk == False:
+        destinations = list()
+
+    return isOk,destinations
+
+def updateHumanTargetLocal(humanTarget,human_target_x, human_target_z, human_target_height, point3d):
+    humanTarget.human_target_x=human_target_x
+    humanTarget.human_target_z=human_target_z
+    humanTarget.human_target_height=human_target_height
+    humanTarget.point3d=point3d
+    humanTarget.save()
+
+def  addHumanTarget(agent_vid,vid,whichTeam, human_target_x,human_target_z,human_target_height,point3d):
+    humanTarget=HumanTarget()
+    humanTarget.agent_vid=agent_vid
+    humanTarget.vid=vid
+    humanTarget.whichTeam=whichTeam
+    humanTarget.human_target_x=human_target_x
+    humanTarget.human_target_z=human_target_z
+    humanTarget.human_target_height=human_target_height
+    humanTarget.point3d=point3d
+    humanTarget.save()
+
+def updateEnemyTargetLocal(enemyTarget,x,y,health,isVisible,point3d,pos_type):
     enemyTarget.x=x
     enemyTarget.y=y
     enemyTarget.health=health
+    enemyTarget.pos_type=pos_type
     # 一致转化到地图内
     while point3d.up_point!=None:
         point3d=point3d.up_point
@@ -343,7 +506,7 @@ def updateEnemyTargetLocal(enemyTarget,x,y,health,isVisible,point3d):
         enemyTarget.isVisible=False
     enemyTarget.save()
 
-def addEnemyTarget(EnemyTarget,vid,x,y,health,type,weapon,whichteam,isVisible,point3d):
+def addEnemyTarget(EnemyTarget,vid,x,y,health,type,weapon,whichteam,isVisible,point3d,equipment_type,pos_type):
     enemyTarget=EnemyTarget()
     enemyTarget.vid=vid
     enemyTarget.x=x
@@ -352,6 +515,8 @@ def addEnemyTarget(EnemyTarget,vid,x,y,health,type,weapon,whichteam,isVisible,po
     enemyTarget.type=type
     enemyTarget.weapon=weapon
     enemyTarget.whichteam=whichteam
+    enemyTarget.equipment_type=equipment_type
+    enemyTarget.pos_type=pos_type
     #一致转化到地图内
     while point3d.up_point!=None:
         point3d=point3d.up_point
@@ -379,46 +544,31 @@ def gameOverTest(request,*args,**kwargs):
 ###############################################处理离散化地图的模块
 def initializeMap(request,*args,**kwargs):
     addRootMap(**global_map_params)
-    addRootMap(**hospital_map_params)
-    addRootMap(**fz1_map_params)
-    addRootMap(**fz2_map_params)
-    addRootMap(**fz3_map_params)
+
+    # addRootMap(**fz1_map_params)
+    #addRootMap(**fz2_map_params)
+    # addRootMap(**fz3_map_params)
     addRootMap(**TVStation_map_params)
     addRootMap(**goverment_map_params)
     globalmap=RootMap.objects.get(vid=1)
     addApartment(root_map=globalmap,**apartment_globalmap_floor_1)
 
-    hospital=RootMap.objects.get(vid=2)
-    addApartment(root_map=hospital,**apartment_hospital_floor_1)
-    addApartment(root_map=hospital, **apartment_hospital_floor_2)
-    addApartment(root_map=hospital, **apartment_hospital_floor_3)
-    addApartment(root_map=hospital, **apartment_hospital_floor_4)
-    addApartment(root_map=hospital, **apartment_hospital_floor_5)
-    addApartment(root_map=hospital, **apartment_hospital_floor_6)
+    initializeHospitalMap()
 
-    fz1=RootMap.objects.get(vid=3)
-    addApartment(root_map=fz1,**apartment_fz1_floor_1)
-    addApartment(root_map=fz1, **apartment_fz1_floor_2)
-    addApartment(root_map=fz1, **apartment_fz1_floor_3)
-    addApartment(root_map=fz1, **apartment_fz1_floor_4)
-    addApartment(root_map=fz1, **apartment_fz1_floor_5)
-    addApartment(root_map=fz1, **apartment_fz1_floor_6)
+    initializeFz1Map()
+    initializeFz2Map()
+    initializeFz3Map()
 
-    fz2 = RootMap.objects.get(vid=4)
-    addApartment(root_map=fz2, **apartment_fz2_floor_1)
-    addApartment(root_map=fz2, **apartment_fz2_floor_2)
-    addApartment(root_map=fz2, **apartment_fz2_floor_3)
-    addApartment(root_map=fz2, **apartment_fz2_floor_4)
-    addApartment(root_map=fz2, **apartment_fz2_floor_5)
-    addApartment(root_map=fz2, **apartment_fz2_floor_6)
-    addApartment(root_map=fz2, **apartment_fz2_floor_7)
+    # fz2 = RootMap.objects.get(vid=4)
+    # addApartment(root_map=fz2, **apartment_fz2_floor_1)
+    # addApartment(root_map=fz2, **apartment_fz2_floor_2)
+    # addApartment(root_map=fz2, **apartment_fz2_floor_3)
+    # addApartment(root_map=fz2, **apartment_fz2_floor_4)
+    # addApartment(root_map=fz2, **apartment_fz2_floor_5)
+    # addApartment(root_map=fz2, **apartment_fz2_floor_6)
+    # addApartment(root_map=fz2, **apartment_fz2_floor_7)
 
-    fz3 = RootMap.objects.get(vid=5)
-    addApartment(root_map=fz3, **apartment_fz3_floor_1)
-    addApartment(root_map=fz3, **apartment_fz3_floor_2)
-    addApartment(root_map=fz3, **apartment_fz3_floor_3)
-    addApartment(root_map=fz3, **apartment_fz3_floor_4)
-    addApartment(root_map=fz3, **apartment_fz3_floor_5)
+
 
     #TVStation还没有渲染好
 
@@ -430,9 +580,11 @@ def initializeMap(request,*args,**kwargs):
     addApartment(root_map=goverment, **apartment_goverment_floor_5)
     addApartment(root_map=goverment, **apartment_goverment_floor_6)
     addApartment(root_map=goverment, **apartment_goverment_floor_7)
+    addApartment(root_map=goverment, **apartment_goverment_floor_8)
+    addApartment(root_map=goverment, **apartment_goverment_floor_9)
 
-
-
+    # 加一个dynamicpoint3d 作为医院的点
+    #updateDynamicPoint3D(**dynamic_hopital_point)
     initPoint3dPart()
     data=dict()
     return  json_response(data)
@@ -492,7 +644,7 @@ def enableNumberCapture():
 def disableNumberCapture():
     pass
 
-def addAgent(whichTeam,vid,x,y,health,type,weapon,point3d):
+def addAgent(whichTeam,vid,x,y,health,type,weapon,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget):
     if whichTeam==0:
         agent=AgentRed()
     else:
@@ -505,15 +657,23 @@ def addAgent(whichTeam,vid,x,y,health,type,weapon,point3d):
     agent.type=type
     agent.weapon=weapon
     agent.point3d=point3d
+    agent.equipment_type=equipment_type
+    agent.isControlledByAi=is_controlled_by_ai
+    agent.is_human_target_changed = is_human_target_changed
+    agent.target_building = humanTarget
     agent.save()
 
 
 
-def updateAgentLocal(agent,x,y,health,point3d):
+def updateAgentLocal(agent,x,y,health,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget):
     agent.x=x
     agent.y=y
     agent.health=health
     agent.point3d=point3d
+    agent.equipment_type=equipment_type
+    agent.isControlledByAi=is_controlled_by_ai
+    agent.is_human_target_changed=is_human_target_changed
+    agent.target_building=humanTarget
     agent.save()
 
 def removeAgent():
@@ -528,13 +688,15 @@ def searchAgent(agent):
     pass
 
 #目标建筑
-def addBuildingTarget(vid,x,y,value,point3d):
+def addBuildingTarget(vid,x,y,value,point3d,capture_type,is_static):
     buildingTarget = BuildingTarget()
     buildingTarget.vid=vid
     buildingTarget.x =x
     buildingTarget.y = y
     buildingTarget.values = value
     buildingTarget.point3d=point3d
+    buildingTarget.capture_type=capture_type
+    buildingTarget.is_static=is_static
     buildingTarget.save()
 
 def removeBuildingTarget():
@@ -605,95 +767,103 @@ def addApartment(floor,file_name,root_map,height_floor,height_ceil,height_upper)
         pass
 
 def initPoint3dPart():
+
     #先加入点，后做链接
 
     #global
-    p_global_to_hospital= addStaticPoint3D(**point_global_to_hospital_2)
 
+    p_global_to_goverment=addStaticPoint3D(**point_global_to_goverment_7)
 
-    #####Hospital
-    # 一楼
-    p_hospital_to_global= addStaticPoint3D(**point_hostpital_floor_1_down)
-    p_hospital_1_up= addStaticPoint3D(**point_hostpital_floor_1_up)
-    addStaticPoint3D(**point_hostpital_floor_1_stair_1)
-    addStaticPoint3D(**point_hostpital_floor_1_stair_2)
-    addStaticPoint3D(**point_hostpital_floor_1_stair_3)
-    addStaticPoint3D(**point_hostpital_floor_1_stair_4)
-    addStaticPoint3D(**point_hostpital_floor_1_stair_5)
-    addStaticPoint3D(**point_hostpital_floor_1_stair_6)
+    ##Goverment
+    #一楼
+    p_goverment_to_global=addStaticPoint3D(**point_goverment_floor_1_down)
+    p_goverment_1_up=addStaticPoint3D(**point_goverment_floor_1_up)
+    addStaticPoint3D(**point_goverment_floor_1_stair_1)
+    addStaticPoint3D(**point_goverment_floor_1_stair_2)
+    addStaticPoint3D(**point_goverment_floor_1_stair_3)
+    addStaticPoint3D(**point_goverment_floor_1_stair_4)
+    addStaticPoint3D(**point_goverment_floor_1_stair_5)
+    addStaticPoint3D(**point_goverment_floor_1_stair_6)
 
     #二楼
-    p_hospital_2_down=addStaticPoint3D(**point_hostpital_floor_2_stair_down)
-    p_hospital_2_up= addStaticPoint3D(**point_hostpital_floor_2_stair_up)
-    addStaticPoint3D(**point_hostpital_floor_2_stair_1)
-    addStaticPoint3D(**point_hostpital_floor_2_stair_2)
-    addStaticPoint3D(**point_hostpital_floor_2_stair_3)
-    addStaticPoint3D(**point_hostpital_floor_2_stair_4)
-    addStaticPoint3D(**point_hostpital_floor_2_stair_5)
-    addStaticPoint3D(**point_hostpital_floor_2_stair_6)
+    p_goverment_2_down=addStaticPoint3D(**point_goverment_floor_2_down)
+    p_goverment_2_up=addStaticPoint3D(**point_goverment_floor_2_up)
+    addStaticPoint3D(**point_goverment_floor_2_stair_1)
+    addStaticPoint3D(**point_goverment_floor_2_stair_2)
+    addStaticPoint3D(**point_goverment_floor_2_stair_3)
+    addStaticPoint3D(**point_goverment_floor_2_stair_4)
+    addStaticPoint3D(**point_goverment_floor_2_stair_5)
+   # addStaticPoint3D(**point_goverment_floor_2_stair_6)
 
     #三楼
-    p_hospital_3_down= addStaticPoint3D(**point_hostpital_floor_3_stair_down)
-    p_hospital_3_up=addStaticPoint3D(**point_hostpital_floor_3_stair_up)
-    addStaticPoint3D(**point_hostpital_floor_3_stair_1)
-    addStaticPoint3D(**point_hostpital_floor_3_stair_2)
-    addStaticPoint3D(**point_hostpital_floor_3_stair_3)
-    addStaticPoint3D(**point_hostpital_floor_3_stair_4)
-    addStaticPoint3D(**point_hostpital_floor_3_stair_5)
-    addStaticPoint3D(**point_hostpital_floor_3_stair_6)
+    p_goverment_3_down = addStaticPoint3D(**point_goverment_floor_3_down)
+    p_goverment_3_up = addStaticPoint3D(**point_goverment_floor_3_up)
+    addStaticPoint3D(**point_goverment_floor_3_stair_1)
+    addStaticPoint3D(**point_goverment_floor_3_stair_2)
+    addStaticPoint3D(**point_goverment_floor_3_stair_3)
+    addStaticPoint3D(**point_goverment_floor_3_stair_4)
+    addStaticPoint3D(**point_goverment_floor_3_stair_5)
+    addStaticPoint3D(**point_goverment_floor_3_stair_6)
 
-    # 四楼
-    p_hospital_4_down=addStaticPoint3D(**point_hostpital_floor_4_stair_down)
-    p_hospital_4_up=addStaticPoint3D(**point_hostpital_floor_4_stair_up)
-    addStaticPoint3D(**point_hostpital_floor_4_stair_1)
-    addStaticPoint3D(**point_hostpital_floor_4_stair_2)
-    addStaticPoint3D(**point_hostpital_floor_4_stair_3)
-    addStaticPoint3D(**point_hostpital_floor_4_stair_4)
-    addStaticPoint3D(**point_hostpital_floor_4_stair_5)
-    addStaticPoint3D(**point_hostpital_floor_4_stair_6)
+    #四楼
+    p_goverment_4_down = addStaticPoint3D(**point_goverment_floor_4_down)
+    p_goverment_4_up = addStaticPoint3D(**point_goverment_floor_4_up)
+    addStaticPoint3D(**point_goverment_floor_4_stair_1)
+    addStaticPoint3D(**point_goverment_floor_4_stair_2)
+    addStaticPoint3D(**point_goverment_floor_4_stair_3)
+    addStaticPoint3D(**point_goverment_floor_4_stair_4)
+    addStaticPoint3D(**point_goverment_floor_4_stair_5)
+    # 五楼
+    p_goverment_5_down = addStaticPoint3D(**point_goverment_floor_5_down)
+    p_goverment_5_up = addStaticPoint3D(**point_goverment_floor_5_up)
+    addStaticPoint3D(**point_goverment_floor_5_stair_1)
+    addStaticPoint3D(**point_goverment_floor_5_stair_2)
+    addStaticPoint3D(**point_goverment_floor_5_stair_3)
+    addStaticPoint3D(**point_goverment_floor_5_stair_4)
+    addStaticPoint3D(**point_goverment_floor_5_stair_5)
+    addStaticPoint3D(**point_goverment_floor_5_stair_6)
 
-    #五楼
-    p_hospital_5_down = addStaticPoint3D(**point_hostpital_floor_5_stair_down)
-    p_hospital_5_up = addStaticPoint3D(**point_hostpital_floor_5_stair_up)
-    addStaticPoint3D(**point_hostpital_floor_5_stair_1)
-    addStaticPoint3D(**point_hostpital_floor_5_stair_2)
-    addStaticPoint3D(**point_hostpital_floor_5_stair_3)
-    addStaticPoint3D(**point_hostpital_floor_5_stair_4)
-    addStaticPoint3D(**point_hostpital_floor_5_stair_5)
-    addStaticPoint3D(**point_hostpital_floor_5_stair_6)
+    # 六楼
+    p_goverment_6_down = addStaticPoint3D(**point_goverment_floor_6_down)
+    p_goverment_6_up = addStaticPoint3D(**point_goverment_floor_6_up)
+    addStaticPoint3D(**point_goverment_floor_6_stair_1)
+    addStaticPoint3D(**point_goverment_floor_6_stair_2)
+    addStaticPoint3D(**point_goverment_floor_6_stair_3)
+    addStaticPoint3D(**point_goverment_floor_6_stair_4)
+    addStaticPoint3D(**point_goverment_floor_6_stair_5)
+
+    #七楼
+    p_goverment_7_down = addStaticPoint3D(**point_goverment_floor_7_down)
+    p_goverment_7_up = addStaticPoint3D(**point_goverment_floor_7_up)
+    addStaticPoint3D(**point_goverment_floor_7_stair_1)
+    addStaticPoint3D(**point_goverment_floor_7_stair_2)
+    addStaticPoint3D(**point_goverment_floor_7_stair_3)
+    addStaticPoint3D(**point_goverment_floor_7_stair_4)
+    addStaticPoint3D(**point_goverment_floor_7_stair_5)
+
+    # 八楼
+    p_goverment_8_down = addStaticPoint3D(**point_goverment_floor_8_down)
+    p_goverment_8_up = addStaticPoint3D(**point_goverment_floor_8_up)
+    addStaticPoint3D(**point_goverment_floor_8_stair_1)
+    addStaticPoint3D(**point_goverment_floor_8_stair_2)
+    addStaticPoint3D(**point_goverment_floor_8_stair_3)
+    addStaticPoint3D(**point_goverment_floor_8_stair_4)
+    addStaticPoint3D(**point_goverment_floor_8_stair_5)
+
+    # 九楼
+    p_goverment_9_down = addStaticPoint3D(**point_goverment_floor_9_down)
+
+    ##Global<- Connection ->Goverment
+    connectTwoPoints(p_global_to_goverment, p_goverment_to_global)
+    ##goverment_1<- Connection ->goverment_2
+    connect_apartment_floor(p_goverment_1_up.self_apartment, p_goverment_2_down)
+    connect_apartment_floor(p_goverment_2_up.self_apartment, p_goverment_3_down)
+    connect_apartment_floor(p_goverment_3_up.self_apartment, p_goverment_4_down)
+    connect_apartment_floor(p_goverment_4_up.self_apartment, p_goverment_5_down)
+    connect_apartment_floor(p_goverment_5_up.self_apartment, p_goverment_6_down)
+    connect_apartment_floor(p_goverment_6_up.self_apartment, p_goverment_7_down)
+    connect_apartment_floor(p_goverment_7_up.self_apartment, p_goverment_8_down)
+    connect_apartment_floor(p_goverment_8_up.self_apartment, p_goverment_9_down)
 
 
-    #六楼
-    p_hospital_6_down=addStaticPoint3D(**point_hostpital_floor_6_stair_down)
-
-    ##Global<- Connection ->Hospital
-    connectTwoPoints(p_global_to_hospital,p_hospital_to_global)
-    ##Hospital_1<- Connection ->Hospital_2
-    connect_apartment_floor(p_hospital_1_up.self_apartment,p_hospital_2_down)
-    ##Hospital_2<- Connection ->Hospital_3
-    connect_apartment_floor(p_hospital_2_up.self_apartment,p_hospital_3_down)
-    ##Hospital_3<- Connection ->Hospital_4
-    connect_apartment_floor(p_hospital_3_up.self_apartment,p_hospital_4_down)
-    ##Hospital_4<- Connection ->Hospital_5
-    connect_apartment_floor(p_hospital_4_up.self_apartment, p_hospital_5_down)
-    ##Hospital_5<- Connection ->Hospital_6
-    connect_apartment_floor(p_hospital_5_up.self_apartment, p_hospital_6_down)
-
-
-
-    ##Hospital
-def connect_apartment_floor(apartment,upper_point):
-    #该层节点
-    self_points=apartment.self_point_set.exclude(vid__isnull=True).order_by('vid')
-    points_len=len(self_points)
-
-    for i in range(0,points_len):
-        point3d=self_points[i]
-        if point3d.is_down_point_of_apartment:
-            continue
-        if i==points_len-1:
-            connectTwoPoints(point3d,upper_point)
-        else:
-            point_post=self_points[i+1]
-            connectTwoPoints(point3d,point_post)
 

@@ -16,8 +16,8 @@ SHOW_HEAT_MAP = False
 Red_Team_Num = 30
 Blue_Team_Num = 30
 
-Map_Length = 50
-Map_Width = 50
+Map_Length = 140
+Map_Width = 60
 
 Capture_Target_worker_num = 2
 Obstacle_Target_worker_num = 2
@@ -26,7 +26,8 @@ Enemy_Target_worker_num = 2
 Max_Distance = (Map_Length ** 2 + Map_Width ** 2) ** 0.5     # meter
 
 # 
-Hospital_pos = [46, 43]       # 医院坐标
+Hospital_pos =[23, 47]   # 医院坐标
+Hospital_vid = 21999
 
 
 # Big Influence Map Initialize
@@ -61,6 +62,21 @@ Attack_Vulnerablity_coef = 0.5
 # result
 target_assign_result = {}
 
-name_map={"Single":"Engineer",
-          "Vehicle":"ArmoredCar",
-          "AirCraft":"Military_Helicopter"}
+
+# 夺控点与可夺控方的对应关系    
+target_relationship = {'air_detect_point':['air_detect_unit', 'air_fire_unit'],\
+                        'air_fire_point':['air_fire_unit'],\
+                        'air_defense_point':['air_defence_unit'],\
+                        'ind_detect_point':['ind_detect_unit', 'ind_fire_unit'],\
+                        'ind_fire_point':['ind_fire_unit'],\
+                        'outd_detect_point':[ 'outd_detect_unit', 'outd_fire_unit'],\
+                        'outd_fire_point':['air_fire_unit', 'outd_fire_unit'],\
+                       'out_air_defense_point':['out_air_defence_unit'],\
+                       'all_type':['outd_detect_unit','outd_fire_unit','air_detect_unit',\
+                        'air_fire_unit','ind_detect_unit','ind_fire_unit','air_defence_unit','engineer','out_air_defence_unit'],}
+
+enemy_pos_relationship = {'indoor_pos':['ind_fire_unit'],\
+                        'outdoor_pos':['air_fire_unit', 'outd_fire_unit','air_detect_unit'],\
+                        'air_pos':['air_defence_unit', 'air_fire_unit','out_air_defence_unit']}
+
+

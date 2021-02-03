@@ -2,9 +2,9 @@
 # from  AIServer.rules_project.param import *
 # from  AIServer.ShatteredExp.params import *
 from django.db import IntegrityError
-from  ShatteredExp.models import *
+from  .models import *
 from  rules_project.param import *
-from  ShatteredExp.params import *
+from  .params import *
 
 #用于判断该点属于那一张图，哪一个点后返回
 def get_start_point(which_team,vid):
@@ -14,10 +14,11 @@ def get_start_point(which_team,vid):
         Agent=AgentBlue
     agent= Agent.objects.get(vid=vid)
 
-    return  agent.point3d
+    return  agent.point3d,agent
 
-def get_end_point(target_vid,enemy_target_list,obstacle_list,building_list):
-
+def get_end_point(target_vid,enemy_target_list,obstacle_list,building_list,my_agent_list):
+    if target_vid==POINT_HOSPITAL_VID:
+        return  Point3D.objects.get(agent_vid=POINT_HOSPITAL_VID)
     for obstacle in obstacle_list:
         if obstacle.vid==target_vid:
             return  obstacle.point3d
@@ -37,51 +38,94 @@ def get_end_point(target_vid,enemy_target_list,obstacle_list,building_list):
         if building.vid==target_vid:
             return  building.point3d
 
+    for my_agent in my_agent_list:
+        if my_agent.vid==target_vid:
+            return  my_agent.point3d
+
     return Point3D.objects.exclude(vid__isnull=True).get(vid=POINT_HOSPITAL_VID)
 
 #主函数
 #start_point:is_in_map?True:False, ，
-def transform_destination(which_team,vid,target_vid,enemy_target_list,obstacle_list,building_list):
-    start_point=get_start_point(which_team,vid)
+def transform_destination(which_team,vid,target_vid,enemy_target_list,obstacle_list,building_list,my_agent_list,human_target_point=None):
+    start_point,my_agent=get_start_point(which_team,vid)
     # if start_point==None:
     #     print('Its None:'+start_point)
     # else:
     #     print('Its None:' +str(start_point.float_x)+','+str(start_point.float_z)+')')
-    print('start_point_vid:'+str(start_point.vid)+' ######################## vid:'+str(vid))
-    end_point=get_end_point(target_vid,enemy_target_list,obstacle_list,building_list)
+   # print('start_point_vid:'+str(start_point.vid)+' ######################## vid:'+str(vid))
+    if human_target_point!=None:
+        end_point=human_target_point
+    else:
+        end_point=get_end_point(target_vid,enemy_target_list,obstacle_list,building_list,my_agent_list)
+
     if start_point.is_in_map:
         if start_point.self_apartment.root_map.vid == end_point.self_apartment.root_map.vid:
-                return True,True,tranform_in_map(start_point,end_point)
+          #     print('in the same maaaaap~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                return True,True,tranform_in_map(start_point,end_point),my_agent
 
         else:
+        #    print('in the different maaaaap~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
             if start_point.self_apartment.root_map.vid==1: #startpoint在global内，而endpoint不在
                 enter_points= start_point.self_apartment.up_points.all()
                 for enter_point in enter_points:
                     if end_point.self_apartment.root_map.vid==enter_point.connected_apartment.root_map.vid:
                         if start_point.is_up_point_of_apartment and start_point.connected_apartment.root_map.vid==end_point.self_apartment.root_map.vid:
-                            return  True,True,enter_point.up_point
+                            return  True,True,enter_point.up_point,my_agent
                         else:
-                            return True,True,enter_point
-                return  False,True,None
+                            return True,True,enter_point,my_agent
+                return  False,True,None,my_agent
             elif end_point.self_apartment.root_map.vid==1: #startpoint在楼内，endpoint在global内
+               # print('start in building end in global~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                 #修改
-
-                return True,True,tranform_in_map(start_point,start_point.self_apartment.root_map.apartment_set.all().get(floor=1).down_points.first())
+                # print('end_point x:' + str(end_point.float_x) + ' end_point z:' + str( \
+                #    end_point.float_z) + ' end_point_height:' + str(end_point.float_height))
+                if start_point.self_apartment.floor==1 and start_point.is_down_point_of_apartment:
+                    if start_point.down_point==None:
+                        print('error in building->global :junction')
+                    return True,True,start_point.down_point,my_agent
+                input_end_point=start_point.self_apartment.root_map.apartment_set.all().get(floor=1).down_points.first()
+                if input_end_point==None:
+              #      print('End point is None start point apartment:'+str(start_point.self_apartment.floor)+' root_map_vid:'+str(start_point.self_apartment.root_map.vid))
+                    isOk=False
+                    ret_point=None
+                else:
+                    isOk=True
+                    ret_point=tranform_in_map(start_point,input_end_point)
+                    if ret_point==None:
+                        print('error in building->global :Not junction')
+                return isOk,True,ret_point,my_agent
 
             else:
-                return True,True, tranform_in_map(start_point,start_point.self_apartment.root_map.apartment_set.all().get(floor=1).down_points.first())
+            #    print('start in building end in building~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                if start_point.self_apartment.floor==1 and start_point.is_down_point_of_apartment:
+                    return True,True,start_point.down_point,my_agent
+                else:
+                    input_end_point = start_point.self_apartment.root_map.apartment_set.all().get(floor=1).down_points.first()
+                    if input_end_point == None:
+                        print('End point is None start point apartment:' + str(
+                            start_point.self_apartment.floor) + ' root_map_vid:' + str(
+                            start_point.self_apartment.root_map.vid))
+                        isOk = False
+                        ret_point = None
+                    else:
+                        isOk = True
+                        ret_point = tranform_in_map(start_point, input_end_point)
+                        if ret_point == None:
+                            print('error in building->global :Not junction')
+                    return isOk, True, ret_point, my_agent
+
 
     else: #start_point 在楼梯上
         if start_point.self_apartment.root_map.vid==end_point.self_apartment.root_map.vid:
             if start_point.float_height>end_point.float_height:
-                return True,False,start_point.down_point
+                return True,False,start_point.down_point,my_agent
 
             else:
 
-                return True,False,start_point.up_point
+                return True,False,start_point.up_point,my_agent
 
         else:
-            return  True,False,start_point.down_point
+            return  True,False,start_point.down_point,my_agent
 
 
 
@@ -90,6 +134,10 @@ def transform_destination(which_team,vid,target_vid,enemy_target_list,obstacle_l
 
 def tranform_in_map(start_point,end_point):
         #同楼同层一张图
+        if start_point==None:
+            print("start point is None in same map~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        if end_point==None:
+            print("end point is None in same map~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         if start_point.self_apartment.floor==end_point.self_apartment.floor:
             return end_point
         #同楼不同层
@@ -99,6 +147,8 @@ def tranform_in_map(start_point,end_point):
                 if start_point.is_down_point_of_apartment:
                     return  start_point.down_point
                 else:
+                    if down_point==None:
+                        print(' same map downpoint is none: apartment'+str(start_point.self_apartment.floor)+' root_map:'+str(start_point.self_apartment.root_map.vid))
                     return  down_point
 
             else:
@@ -155,6 +205,9 @@ def addStaticPoint3D(self_root_map_vid,self_floor,is_up_point_of_apartment,is_do
 
 #TODO 保证vid要唯一
 def updateDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid=-1):
+   # print('EnemyRootMap vid:'+str(rootmap_vid)+' Enemy Floor:'+str(apartment_floor))
+   #  if agent_vid==1850013:
+   #    print('Agent Vid:'+str(agent_vid)+'Enemy Float x:'+str(float_x)+'Enemy Float z:'+str(float_z)+' Enemy Float Height:'+str(float_height))
     points= Point3D.objects.exclude(agent_vid=-1).filter(agent_vid=agent_vid)
     if len(points)>0:
        # points.delete()
@@ -204,7 +257,8 @@ def addDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,a
             return None
         return point3d
 
-
+    if(agent_vid==1850013):
+        print('Enemy Rootmap: pos_interval'+str(rootmap.pos_interval)+' float x:'+str(float_x)+' z:'+str(float_z)+'stripe:'+str(rootmap.stripe))
     int_x, int_y = transform_float_pos_to_int(rootmap, float_x, float_z)
    # print('###################################')
     # point3d=Point3D()

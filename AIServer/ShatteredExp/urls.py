@@ -15,5 +15,6 @@ urlpatterns = [
     path('updateMapData/',views.updateMapData,name='updateMapData'),
     path('updateApartmentData/',views.updateApartmentData,name='updateApartmentData'),
     path('updateDestinationTest/',views.updateDestinationTest,name='updateDestinationTest'),
+    path('updateHumanTarget/',views.updateHumanTarget,name='updateHumanTarget'),
 ]
 

@@ -2,6 +2,16 @@ from django.db import models
 
 # Create your models here.
 
+# class HumanTarget(models.Model):
+#     vid=models.IntegerField(verbose_name='用于取point3d')
+#     whichTeam=models.IntegerField(verbose_name='属于哪支队伍')
+#     agent_vid=models.IntegerField(verbose_name='事实上对应Agent的vid')
+#     human_target_x = models.FloatField(verbose_name='玩家给定目标点_x')
+#     human_target_z = models.FloatField(verbose_name='玩家给定目标点_z')
+#     human_target_height = models.FloatField(verbose_name='玩家给定目标点_height')
+#     point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE, null=True, blank=True)
+#     class Meta:
+#         unique_together = ("whichTeam", "agent_vid")
 
 class AgentBlue(models.Model):
     vid=models.IntegerField(verbose_name="agent唯一编号",unique=True)
@@ -10,10 +20,13 @@ class AgentBlue(models.Model):
     health=models.FloatField(verbose_name="生命值")
     type=models.TextField(verbose_name="装备类型")
     weapon=models.FloatField(verbose_name="",default=1)
+    equipment_type=models.IntegerField(verbose_name='原始装备类型',default=2)
     point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
 
 
-
+    isControlledByAi=models.BooleanField(verbose_name='是否为AI分配目的地',default=True)
+    is_human_target_changed=models.BooleanField(verbose_name='是否更新目的地',default=False)
+    target_building=models.ForeignKey('BuildingTarget',verbose_name='指定目的地',blank=True,null=True,related_name='agent_blue_set',on_delete=models.CASCADE)
 
 
 class AgentRed(models.Model):
@@ -23,7 +36,13 @@ class AgentRed(models.Model):
     health = models.FloatField(verbose_name="生命值")
     type = models.TextField(verbose_name="装备类型")
     weapon = models.FloatField(verbose_name="", default=1)
+    equipment_type = models.IntegerField(verbose_name='原始装备类型', default=2)
     point3d=models.ForeignKey('Point3D',on_delete=models.CASCADE,null=True,blank=True)
+
+    isControlledByAi=models.BooleanField(verbose_name='是否为AI分配目的地',default=True)
+    is_human_target_changed = models.BooleanField(verbose_name='是否更新目的地', default=False)
+    target_building = models.ForeignKey('BuildingTarget',verbose_name='指定目的地', blank=True, null=True, related_name='agent_red_set',
+                                        on_delete=models.CASCADE)
 
 class NumberCapture(models.Model):
     totalRed=models.IntegerField(verbose_name="红方总数",default=0)
@@ -42,6 +61,10 @@ class EnemyTargetOfBlue(models.Model):
     weapon = models.FloatField(verbose_name="武器杀伤力", default=1)
     isVisible=models.BooleanField(verbose_name="是否从视野中消失")
     point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
+    equipment_type = models.IntegerField(verbose_name='原始装备类型', default=2)
+    pos_type=models.IntegerField(verbose_name='位置信息', default=2)
+
+
 
 #存储被红方检测到的蓝方敌人
 class EnemyTargetOfRed(models.Model):
@@ -53,6 +76,8 @@ class EnemyTargetOfRed(models.Model):
     weapon = models.FloatField(verbose_name="武器杀伤力", default=1)
     isVisible = models.BooleanField(verbose_name="是否从视野中消失")
     point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
+    equipment_type = models.IntegerField(verbose_name='原始装备类型', default=2)
+    pos_type = models.IntegerField(verbose_name='位置信息', default=2)
 
 class BuildingTarget(models.Model):
     vid=models.IntegerField(verbose_name="设备唯一编号",unique=True)
@@ -60,7 +85,8 @@ class BuildingTarget(models.Model):
     y = models.IntegerField(verbose_name="y坐标值")
     values=models.FloatField(verbose_name="夺控地点价值",default=1)
     point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
-
+    capture_type=models.IntegerField(verbose_name='夺控点的类型',default=7)
+    is_static=models.BooleanField(verbose_name='是否为静态夺控点',default=True)
 
 class ObstacleTarget(models.Model):
     vid=models.IntegerField(verbose_name="障碍物唯一编号",unique=True)
