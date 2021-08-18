@@ -16,20 +16,41 @@ A_STAR_LEFT_2_X=int(29)
 A_STAR_LEFT_2_Y=int(30)
 POINT_HOSPITAL_VID=21999
 
+#三个参数需要通过Stage来做出修改
+STAGE_1_VID=21100001
+STAGE_1_X_Y=[23,33]
+
+STAGE_2_VID=22100001
+STAGE_2_X_Y=[24,24]
+
+STAGE_3_VID=23100001
+STAGE_3_X_Y=[19,15]
+
+STAGE_4_VID=24000001
+STAGE_4_X_Y=[27,9]
+
+STAGE_VIDS=[STAGE_1_VID,STAGE_2_VID,STAGE_3_VID,STAGE_4_VID]
+STAGE_X_Ys=[STAGE_1_X_Y,STAGE_2_X_Y,STAGE_3_X_Y,STAGE_4_X_Y]
+
+TARGET_VID=28000001
+TARGET_X_Y=[23,3]
+STAGE_SPLIT=True
 HUMAN_TARGET_BIAS=80000000
+
+GOVERMENT_VID=6
 global_map_params={"vid":1,
                    'name':'GlobalMap',
-                  'start_pos_x':-300,
+                  'start_pos_x':-500,
                   'start_pos_y':-400,
-                  'end_pos_x':300,
+                  'end_pos_x':700,
                   'end_pos_y':1000,
                   'pos_interval':0.2,
-                  'stripe':50,
+                  'stripe':100,
                   'local_path': '/../PreMap/GlobalMap/',
                   # 'floor_gap':300,
                   'base_height':0,}
 
-goverment_map_params={"vid":7,
+goverment_map_params={"vid":6,
                    'name':'Goverment',
                   'start_pos_x':-25,
                   'start_pos_y':-311,
@@ -49,24 +70,24 @@ goverment_map_params={"vid":7,
 
 
 
-
-TVStation_map_params={"vid":6,
-                   'name':'TVStationMap',
-                  'start_pos_x':-140,
-                  'start_pos_y':298,
-                  'end_pos_x':-98,
-                  'end_pos_y':358,
-                  'pos_interval':1,
-                  'stripe':1,
-                  'local_path': '/../PreMap/TVStationMap/',
-                  # 'floor_gap':3.1,
-                  'base_height':0.4,}
+#
+# TVStation_map_params={"vid":6,
+#                    'name':'TVStationMap',
+#                   'start_pos_x':-140,
+#                   'start_pos_y':298,
+#                   'end_pos_x':-98,
+#                   'end_pos_y':358,
+#                   'pos_interval':1,
+#                   'stripe':1,
+#                   'local_path': '/../PreMap/TVStationMap/',
+#                   # 'floor_gap':3.1,
+#                   'base_height':0.4,}
 
 
 
 apartment_globalmap_floor_1={
     'floor': 1,
-    'file_name': '1.png',
+    'file_name': '3.png',
     'height_ceil': 300,
     'height_floor': 0.4,
     'height_upper': 300,
@@ -151,7 +172,7 @@ point_global_to_goverment_7={'self_root_map_vid':1,
                         'vid':11007,
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':6,
                         'connected_floor':1,
                         'float_x':50,
                         'float_z':-264,
@@ -160,7 +181,7 @@ point_global_to_goverment_7={'self_root_map_vid':1,
 
 
 
-point_goverment_floor_1_down={'self_root_map_vid':7,
+point_goverment_floor_1_down={'self_root_map_vid':6,
                         'self_floor':1,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
@@ -174,56 +195,56 @@ point_goverment_floor_1_down={'self_root_map_vid':7,
                         'float_height':0.4,
                         'agent_vid':-1}
 
-point_goverment_floor_1_up={'self_root_map_vid':7,
+point_goverment_floor_1_up={'self_root_map_vid':6,
                         'self_floor':1,
                         'is_up_point_of_apartment':True,
                         'is_down_point_of_apartment':False,
                         'vid':71002,
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':2,
                         'float_x':24,
                         'float_z':-293.5,
                         'float_height':1.1,
                         'agent_vid':-1}
 
-point_goverment_floor_1_stair_1={'self_root_map_vid':7,
+point_goverment_floor_1_stair_1={'self_root_map_vid':6,
                         'self_floor':1,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
                         'vid':71003,
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':2,
                         'float_x':24,
                         'float_z':-295.3,
                         'float_height':1.68,
                         'agent_vid':-1}
 
-point_goverment_floor_1_stair_2={'self_root_map_vid':7,
+point_goverment_floor_1_stair_2={'self_root_map_vid':6,
                         'self_floor':1,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
                         'vid':71004,
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':2,
                         'float_x':24,
                         'float_z':-297,
                         'float_height':2.57,
                         'agent_vid':-1}
 
-point_goverment_floor_1_stair_3={'self_root_map_vid':7,
+point_goverment_floor_1_stair_3={'self_root_map_vid':6,
                         'self_floor':1,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
                         'vid':71005,
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':2,
 
                         'float_x':24,
@@ -231,28 +252,28 @@ point_goverment_floor_1_stair_3={'self_root_map_vid':7,
                         'float_height':3.13,
                         'agent_vid':-1}
 
-point_goverment_floor_1_stair_4={'self_root_map_vid':7,
+point_goverment_floor_1_stair_4={'self_root_map_vid':6,
                         'self_floor':1,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
                         'vid':71006,
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':2,
                         'float_x':25.716,
                         'float_z':-298.99,
                         'float_height':3.13,
                         'agent_vid':-1}
 
-point_goverment_floor_1_stair_5={'self_root_map_vid':7,
+point_goverment_floor_1_stair_5={'self_root_map_vid':6,
                         'self_floor':1,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
                         'vid':71007,
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':2,
                         'float_x':27,
                         'float_z':-297.2,
@@ -260,14 +281,14 @@ point_goverment_floor_1_stair_5={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 
-point_goverment_floor_1_stair_6={'self_root_map_vid':7,
+point_goverment_floor_1_stair_6={'self_root_map_vid':6,
                         'self_floor':1,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':2,
 
                         'vid':71008,
@@ -277,14 +298,14 @@ point_goverment_floor_1_stair_6={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 
-point_goverment_floor_2_down={'self_root_map_vid':7,
+point_goverment_floor_2_down={'self_root_map_vid':6,
                         'self_floor':2,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':1,
 
                         'vid': 72001,
@@ -293,14 +314,14 @@ point_goverment_floor_2_down={'self_root_map_vid':7,
                         'float_height':4.8,
                         'agent_vid':-1}
 
-point_goverment_floor_2_up={'self_root_map_vid':7,
+point_goverment_floor_2_up={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':2,
                         'is_up_point_of_apartment':True,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':3,
 
                         'vid':72002,
@@ -310,14 +331,14 @@ point_goverment_floor_2_up={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 
-point_goverment_floor_2_stair_1={'self_root_map_vid':7,
+point_goverment_floor_2_stair_1={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':2,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':3,
 
                         'vid':72003,
@@ -327,14 +348,14 @@ point_goverment_floor_2_stair_1={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 
-point_goverment_floor_2_stair_2={'self_root_map_vid':7,
+point_goverment_floor_2_stair_2={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':2,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':3,
 
                         'vid':72004,
@@ -344,14 +365,14 @@ point_goverment_floor_2_stair_2={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 
-point_goverment_floor_2_stair_3={'self_root_map_vid':7,
+point_goverment_floor_2_stair_3={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':2,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':3,
 
                         'vid':72005,
@@ -360,14 +381,14 @@ point_goverment_floor_2_stair_3={'self_root_map_vid':7,
                         'float_height':5.831,
                         'agent_vid':-1}
 
-point_goverment_floor_2_stair_4={'self_root_map_vid':7,
+point_goverment_floor_2_stair_4={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':2,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':3,
 
                         'vid':72006,
@@ -376,14 +397,14 @@ point_goverment_floor_2_stair_4={'self_root_map_vid':7,
                         'float_height':6.75,
                         'agent_vid':-1}
 
-point_goverment_floor_2_stair_5={'self_root_map_vid':7,
+point_goverment_floor_2_stair_5={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':2,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':3,
 
                         'vid':72007,
@@ -393,14 +414,14 @@ point_goverment_floor_2_stair_5={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 #第三层
-point_goverment_floor_3_down={'self_root_map_vid':7,
+point_goverment_floor_3_down={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':3,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':2,
 
                         'vid': 73001,
@@ -409,14 +430,14 @@ point_goverment_floor_3_down={'self_root_map_vid':7,
                         'float_height':7.921,
                         'agent_vid':-1}
 
-point_goverment_floor_3_up={'self_root_map_vid':7,
+point_goverment_floor_3_up={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':3,
                         'is_up_point_of_apartment':True,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':4,
 
                         'vid':73002,
@@ -425,14 +446,14 @@ point_goverment_floor_3_up={'self_root_map_vid':7,
                         'float_height':7.921,
                         'agent_vid':-1}
 #3->4楼梯
-point_goverment_floor_3_stair_1={'self_root_map_vid':7,
+point_goverment_floor_3_stair_1={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':3,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':4,
 
                         'vid':73003,
@@ -441,14 +462,14 @@ point_goverment_floor_3_stair_1={'self_root_map_vid':7,
                         'float_height':8.192,
                         'agent_vid':-1}
 
-point_goverment_floor_3_stair_2={'self_root_map_vid':7,
+point_goverment_floor_3_stair_2={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':3,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':4,
 
                         'vid':73004,
@@ -457,14 +478,14 @@ point_goverment_floor_3_stair_2={'self_root_map_vid':7,
                         'float_height':8.694,
                         'agent_vid':-1}
 
-point_goverment_floor_3_stair_3={'self_root_map_vid':7,
+point_goverment_floor_3_stair_3={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':3,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':4,
 
                         'vid':73005,
@@ -473,14 +494,14 @@ point_goverment_floor_3_stair_3={'self_root_map_vid':7,
                         'float_height':9.125,
                         'agent_vid':-1}
 
-point_goverment_floor_3_stair_4={'self_root_map_vid':7,
+point_goverment_floor_3_stair_4={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':3,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':4,
 
                         'vid':73006,
@@ -490,14 +511,14 @@ point_goverment_floor_3_stair_4={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 
-point_goverment_floor_3_stair_5={'self_root_map_vid':7,
+point_goverment_floor_3_stair_5={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':3,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':4,
 
                         'vid':73007,
@@ -506,14 +527,14 @@ point_goverment_floor_3_stair_5={'self_root_map_vid':7,
                         'float_height':9.697,
                         'agent_vid':-1}
 
-point_goverment_floor_3_stair_6={'self_root_map_vid':7,
+point_goverment_floor_3_stair_6={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':3,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':4,
 
                         'vid':73008,
@@ -522,14 +543,14 @@ point_goverment_floor_3_stair_6={'self_root_map_vid':7,
                         'float_height':10.343,
                         'agent_vid':-1}
 #四楼
-point_goverment_floor_4_down={'self_root_map_vid':7,
+point_goverment_floor_4_down={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':4,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':3,
 
                         'vid': 74001,
@@ -538,14 +559,14 @@ point_goverment_floor_4_down={'self_root_map_vid':7,
                         'float_height':10.824,
                         'agent_vid':-1}
 
-point_goverment_floor_4_up={'self_root_map_vid':7,
+point_goverment_floor_4_up={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':4,
                         'is_up_point_of_apartment':True,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':5,
 
                         'vid':74002,
@@ -554,14 +575,14 @@ point_goverment_floor_4_up={'self_root_map_vid':7,
                         'float_height':10.824,
                         'agent_vid':-1}
 
-point_goverment_floor_4_stair_1={'self_root_map_vid':7,
+point_goverment_floor_4_stair_1={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':4,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':5,
 
                         'vid':74003,
@@ -570,14 +591,14 @@ point_goverment_floor_4_stair_1={'self_root_map_vid':7,
                         'float_height':11.59,
                         'agent_vid':-1}
 
-point_goverment_floor_4_stair_2={'self_root_map_vid':7,
+point_goverment_floor_4_stair_2={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':4,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':5,
 
                         'vid':74004,
@@ -586,14 +607,14 @@ point_goverment_floor_4_stair_2={'self_root_map_vid':7,
                         'float_height':12.307,
                         'agent_vid':-1}
 
-point_goverment_floor_4_stair_3={'self_root_map_vid':7,
+point_goverment_floor_4_stair_3={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':4,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':5,
 
                         'vid':74005,
@@ -602,14 +623,14 @@ point_goverment_floor_4_stair_3={'self_root_map_vid':7,
                         'float_height':12.307,
                         'agent_vid':-1}
 
-point_goverment_floor_4_stair_4={'self_root_map_vid':7,
+point_goverment_floor_4_stair_4={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':4,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':5,
 
                         'vid':74006,
@@ -618,14 +639,14 @@ point_goverment_floor_4_stair_4={'self_root_map_vid':7,
                         'float_height':13,
                         'agent_vid':-1}
 
-point_goverment_floor_4_stair_5={'self_root_map_vid':7,
+point_goverment_floor_4_stair_5={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':4,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':5,
 
                         'vid':74007,
@@ -636,14 +657,14 @@ point_goverment_floor_4_stair_5={'self_root_map_vid':7,
 
 
 #五楼
-point_goverment_floor_5_down={'self_root_map_vid':7,
+point_goverment_floor_5_down={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':5,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':4,
 
                         'vid': 75001,
@@ -652,14 +673,14 @@ point_goverment_floor_5_down={'self_root_map_vid':7,
                         'float_height':14.068,
                         'agent_vid':-1}
 
-point_goverment_floor_5_up={'self_root_map_vid':7,
+point_goverment_floor_5_up={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':5,
                         'is_up_point_of_apartment':True,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':6,
 
                         'vid':75002,
@@ -668,14 +689,14 @@ point_goverment_floor_5_up={'self_root_map_vid':7,
                         'float_height':14.1,
                         'agent_vid':-1}
 
-point_goverment_floor_5_stair_1={'self_root_map_vid':7,
+point_goverment_floor_5_stair_1={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':5,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':6,
 
                         'vid':75003,
@@ -684,14 +705,14 @@ point_goverment_floor_5_stair_1={'self_root_map_vid':7,
                         'float_height':14.644,
                         'agent_vid':-1}
 
-point_goverment_floor_5_stair_2={'self_root_map_vid':7,
+point_goverment_floor_5_stair_2={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':5,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':6,
 
                         'vid':75004,
@@ -700,14 +721,14 @@ point_goverment_floor_5_stair_2={'self_root_map_vid':7,
                         'float_height':15.43,
                         'agent_vid':-1}
 
-point_goverment_floor_5_stair_3={'self_root_map_vid':7,
+point_goverment_floor_5_stair_3={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':5,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':6,
 
                         'vid':75005,
@@ -716,14 +737,14 @@ point_goverment_floor_5_stair_3={'self_root_map_vid':7,
                         'float_height':15.739,
                         'agent_vid':-1}
 
-point_goverment_floor_5_stair_4={'self_root_map_vid':7,
+point_goverment_floor_5_stair_4={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':5,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':6,
 
                         'vid':75006,
@@ -732,14 +753,14 @@ point_goverment_floor_5_stair_4={'self_root_map_vid':7,
                         'float_height':15.739,
                         'agent_vid':-1}
 
-point_goverment_floor_5_stair_5={'self_root_map_vid':7,
+point_goverment_floor_5_stair_5={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':5,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':6,
 
                         'vid':75007,
@@ -748,14 +769,14 @@ point_goverment_floor_5_stair_5={'self_root_map_vid':7,
                         'float_height':16.294,
                         'agent_vid':-1}
 
-point_goverment_floor_5_stair_6={'self_root_map_vid':7,
+point_goverment_floor_5_stair_6={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':5,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':6,
 
                         'vid':75008,
@@ -764,14 +785,14 @@ point_goverment_floor_5_stair_6={'self_root_map_vid':7,
                         'float_height':16.716,
                         'agent_vid':-1}
 #六楼
-point_goverment_floor_6_down={'self_root_map_vid':7,
+point_goverment_floor_6_down={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':6,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':5,
 
                         'vid': 76001,
@@ -780,14 +801,14 @@ point_goverment_floor_6_down={'self_root_map_vid':7,
                         'float_height':17.28,
                         'agent_vid':-1}
 
-point_goverment_floor_6_up={'self_root_map_vid':7,
+point_goverment_floor_6_up={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':6,
                         'is_up_point_of_apartment':True,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':7,
 
                         'vid':76002,
@@ -796,14 +817,14 @@ point_goverment_floor_6_up={'self_root_map_vid':7,
                         'float_height':17.28,
                         'agent_vid':-1}
 
-point_goverment_floor_6_stair_1={'self_root_map_vid':7,
+point_goverment_floor_6_stair_1={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':6,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':7,
 
                         'vid':76003,
@@ -812,14 +833,14 @@ point_goverment_floor_6_stair_1={'self_root_map_vid':7,
                         'float_height':18.069,
                         'agent_vid':-1}
 
-point_goverment_floor_6_stair_2={'self_root_map_vid':7,
+point_goverment_floor_6_stair_2={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':6,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':7,
 
                         'vid':76004,
@@ -828,14 +849,14 @@ point_goverment_floor_6_stair_2={'self_root_map_vid':7,
                         'float_height':18.85,
                         'agent_vid':-1}
 
-point_goverment_floor_6_stair_3={'self_root_map_vid':7,
+point_goverment_floor_6_stair_3={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':6,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':7,
 
                         'vid':76005,
@@ -844,14 +865,14 @@ point_goverment_floor_6_stair_3={'self_root_map_vid':7,
                         'float_height':19.093,
                         'agent_vid':-1}
 
-point_goverment_floor_6_stair_4={'self_root_map_vid':7,
+point_goverment_floor_6_stair_4={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':6,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':7,
 
                         'vid':76006,
@@ -860,14 +881,14 @@ point_goverment_floor_6_stair_4={'self_root_map_vid':7,
                         'float_height':19.093,
                         'agent_vid':-1}
 
-point_goverment_floor_6_stair_5={'self_root_map_vid':7,
+point_goverment_floor_6_stair_5={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':6,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':7,
 
                         'vid':76007,
@@ -877,14 +898,14 @@ point_goverment_floor_6_stair_5={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 
-point_goverment_floor_7_down={'self_root_map_vid':7,
+point_goverment_floor_7_down={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':7,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':6,
 
                         'vid': 77001,
@@ -893,14 +914,14 @@ point_goverment_floor_7_down={'self_root_map_vid':7,
                         'float_height': 20.287,
                         'agent_vid':-1}
 
-point_goverment_floor_7_up={'self_root_map_vid':7,
+point_goverment_floor_7_up={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':7,
                         'is_up_point_of_apartment':True,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':8,
 
                         'vid':77002,
@@ -909,14 +930,14 @@ point_goverment_floor_7_up={'self_root_map_vid':7,
                         'float_height':20.287,
                         'agent_vid':-1}
 
-point_goverment_floor_7_stair_1={'self_root_map_vid':7,
+point_goverment_floor_7_stair_1={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':7,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':8,
 
                         'vid':77003,
@@ -925,14 +946,14 @@ point_goverment_floor_7_stair_1={'self_root_map_vid':7,
                         'float_height':20.97,
                         'agent_vid':-1}
 
-point_goverment_floor_7_stair_2={'self_root_map_vid':7,
+point_goverment_floor_7_stair_2={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':7,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':8,
 
                         'vid':77004,
@@ -941,14 +962,14 @@ point_goverment_floor_7_stair_2={'self_root_map_vid':7,
                         'float_height':21.79,
                         'agent_vid':-1}
 
-point_goverment_floor_7_stair_3={'self_root_map_vid':7,
+point_goverment_floor_7_stair_3={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':7,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':8,
 
                         'vid':77005,
@@ -957,14 +978,14 @@ point_goverment_floor_7_stair_3={'self_root_map_vid':7,
                         'float_height':22.377,
                         'agent_vid':-1}
 
-point_goverment_floor_7_stair_4={'self_root_map_vid':7,
+point_goverment_floor_7_stair_4={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':7,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':8,
 
                         'vid':77006,
@@ -973,14 +994,14 @@ point_goverment_floor_7_stair_4={'self_root_map_vid':7,
                         'float_height':22.984,
                         'agent_vid':-1}
 
-point_goverment_floor_7_stair_5={'self_root_map_vid':7,
+point_goverment_floor_7_stair_5={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':7,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':8,
 
                         'vid':77007,
@@ -990,14 +1011,14 @@ point_goverment_floor_7_stair_5={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 #八楼
-point_goverment_floor_8_down={'self_root_map_vid':7,
+point_goverment_floor_8_down={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':8,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':7,
 
                         'vid': 78001,
@@ -1006,14 +1027,14 @@ point_goverment_floor_8_down={'self_root_map_vid':7,
                         'float_height': 24.054,
                         'agent_vid':-1}
 
-point_goverment_floor_8_up={'self_root_map_vid':7,
+point_goverment_floor_8_up={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':8,
                         'is_up_point_of_apartment':True,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':9,
 
                         'vid':78002,
@@ -1022,14 +1043,14 @@ point_goverment_floor_8_up={'self_root_map_vid':7,
                         'float_height':24.054,
                         'agent_vid':-1}
 
-point_goverment_floor_8_stair_1={'self_root_map_vid':7,
+point_goverment_floor_8_stair_1={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':8,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':9,
 
                         'vid':78003,
@@ -1039,14 +1060,14 @@ point_goverment_floor_8_stair_1={'self_root_map_vid':7,
                         'agent_vid':-1}
 
 
-point_goverment_floor_8_stair_2={'self_root_map_vid':7,
+point_goverment_floor_8_stair_2={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':8,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':9,
 
                         'vid':78004,
@@ -1055,14 +1076,14 @@ point_goverment_floor_8_stair_2={'self_root_map_vid':7,
                         'float_height':25.24,
                         'agent_vid':-1}
 
-point_goverment_floor_8_stair_3={'self_root_map_vid':7,
+point_goverment_floor_8_stair_3={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':8,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':9,
 
                         'vid':78005,
@@ -1071,14 +1092,14 @@ point_goverment_floor_8_stair_3={'self_root_map_vid':7,
                         'float_height':25.53,
                         'agent_vid':-1}
 
-point_goverment_floor_8_stair_4={'self_root_map_vid':7,
+point_goverment_floor_8_stair_4={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':8,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':9,
 
                         'vid':78006,
@@ -1087,14 +1108,14 @@ point_goverment_floor_8_stair_4={'self_root_map_vid':7,
                         'float_height':25.62,
                         'agent_vid':-1}
 
-point_goverment_floor_8_stair_5={'self_root_map_vid':7,
+point_goverment_floor_8_stair_5={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':8,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':False,
 
                         'is_in_map':False,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':9,
 
                         'vid':78007,
@@ -1103,14 +1124,14 @@ point_goverment_floor_8_stair_5={'self_root_map_vid':7,
                         'float_height':25.62,
                         'agent_vid':-1}
 
-point_goverment_floor_9_down={'self_root_map_vid':7,
+point_goverment_floor_9_down={'self_root_map_vid':GOVERMENT_VID,
                         'self_floor':9,
                         'is_up_point_of_apartment':False,
                         'is_down_point_of_apartment':True,
 
                         'is_in_map':True,
                         'is_junction':True,
-                        'connected_root_map_vid':7,
+                        'connected_root_map_vid':GOVERMENT_VID,
                         'connected_floor':8,
 
                         'vid': 79001,
@@ -1125,6 +1146,21 @@ class PointType(Enum):
     IN_MAP=1
     IN_STAIRS=2
 
+
+AIR_DETECT_POINT = 1
+AIR_FIRE_POINT = 2
+
+AIR_DEFENSE_POINT = 3
+
+IND_DETECT_POINT = 4
+IND_FIRE_POINT = 5
+
+OUTD_DETECT_POINT = 6
+OUTD_FIRE_POINT = 7
+
+OUT_AIR_DENFENSE_POINT = 8
+
+ALL_TYPE = 9
 
 capture_type_2_int={
     "air_detect_point":1,
@@ -1154,6 +1190,8 @@ capture_type_2_int={
     9:'all_type',
 }
 
+
+
 equipment_type_2_int={
     'outd_detect_unit':1,
     1:'outd_detect_unit',
@@ -1180,6 +1218,12 @@ equipment_type_2_int={
     8:'engineer',
     'out_air_defence_unit':9,
     9:'out_air_defence_unit',
+
+    10:'out_air_floor_unit',
+    'out_air_floor_unit':10,
+
+    11:'cant_move_unit',
+    'cant_move_unit':11,
 }
 INDOOR_POS=1
 OUTDOOR_POS=2
@@ -1215,21 +1259,48 @@ IND_FIRE=6
 AIR_DEFENSE=7
 ENGINEER=8
 OUT_AIR_DEFENSE=9
-outdoor_detect_ls=[2,6,13,15,36,39,40]
-outdoor_fire_ls=[1,3,9,16,17,20,22,83,8]
-air_detect_ls=[14,19,26,27,28,29,31,32]
+OUT_AIR_FLOOR=10
+CANT_MOVE=11
+# outdoor_detect_ls=[2,6,14,13,15,36,39,40]
+# outdoor_fire_ls=[1,3,9,16,17,20,22,83,8]
+# air_detect_ls=[12,19,26,27,28,29,31,32]
+# #8 仅能对地 需要改进
+# air_fire_ls=[7,37,38]
+# ind_detect_ls=[11,23,86]
+# ind_fire_ls=[10,33,34,35,84,85]
+# #21，24仅能在室外 需改进
+#
+# air_defense_ls=[5,18,25,72]
+#
+# out_air_defense_ls=[21,24]
+#
+# out_air_floor_ls=[46,48]
+#
+# cant_move_ls=[]
+# engineer=[]
+load_ability=[11001,12005,22007,22008,22010,30008]
+loaded_ability=[26001,26002,26004]
+outdoor_detect_ls=[11001,11008,11009,11010,11011,11012,11013,12005,12012,12013,12015,12016,12017,12018,12018,13001
+,13002,13003,13004,13005,13006,13007,
+                   13008,13009,13010,13011,13012,21002,21003,21004,21005,21006,30001,30002,30007,30008,27002]
+outdoor_fire_ls=[12001,12002,12004,12014,21001,22001,12003,22003,22007,22008,22009,23001,23002,23003,23004,23005,23006,
+                 23007,23008,23009]
+air_detect_ls=[11002,11003,11004,11005,11006,11007,25001,25002,25004,25006,25007,25008,30004,30005,
+               30006]
 #8 仅能对地 需要改进
-air_fire_ls=[7,37,38]
-ind_detect_ls=[11,12,23,86]
-ind_fire_ls=[10,33,34,35,84,85]
+air_fire_ls=[25003,25005]
+ind_detect_ls=[30003,]
+ind_fire_ls=[12008,12009,12010,26001,26002,26004]
 #21，24仅能在室外 需改进
 
-air_defense_ls=[5,18,25,72]
+air_defense_ls=[12011,24002,26003]
 
-out_air_defense_ls=[21,24]
+out_air_defense_ls=[23010,24001]
+
+out_air_floor_ls=[22002,22004,22005,22006]
+
+cant_move_ls=[12006,12007,27001]
 engineer=[]
-
-
 def is_in(number,ls):
     for _digit in ls:
           if number==_digit:
@@ -1256,10 +1327,15 @@ def servertype_2_equip_type(serverType):
         return  ENGINEER
     elif is_in(serverType,out_air_defense_ls):
         return OUT_AIR_DEFENSE
+    elif is_in(serverType,out_air_floor_ls):
+        return OUT_AIR_FLOOR
     else:
-        return OUTDOOR_DETECT
+        return CANT_MOVE
 
 name_map={"Single":"Engineer",
           "Vehicle":"ArmoredCar",
           "AirCraft":"Military_Helicopter"}
 
+BUILDING_RED=1
+BUILDING_BLUE=2
+BUILDING_DEFAULT=3

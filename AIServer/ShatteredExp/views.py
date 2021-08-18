@@ -11,11 +11,13 @@ from django.db.models import Q
 # from  AIServer.rules_project.param import Map_Length,Map_Width
 # from AIServer.ShatteredExp.models import *
 # from  AIServer.ShatteredExp.destination_transformer import *
-
+import sys,os
+sys.path.append(os.path.dirname(__file__) + os.sep + '../')
 from  .fz1_params import *
 from  .fz3_params import *
 from  .fz2_params import *
 from  .hospital_params import *
+from  .air_points_params import *
 from .utils import *
 from django.db import IntegrityError
 from  .params import *
@@ -24,6 +26,8 @@ from  rules_project.param import *
 from  rules_project.param import Map_Length,Map_Width
 from .models import *
 from  .destination_transformer import *
+import json
+from formation_generation.utils import *
 min_enemy=0
 min_building=1
 min_obstacles=0
@@ -71,11 +75,16 @@ def updateAgent(request,*args,**kwargs):
     server_force_type=int((request.POST.get('serverForceType')))
     is_controlled_by_ai=True if int(request.POST.get('isControlledByAi'))==1 else False
     is_human_target_changed=True if int(request.POST.get('is_human_target_changed'))==1 else False
+
+    azimuth=float((request.POST.get('azimuth')))
+
     human_target_vid=int(request.POST.get('human_target_vid'))
     if human_target_vid!=-1:
         humanTarget_set=BuildingTarget.objects.filter(is_static=0).filter(vid=human_target_vid)
         if len(humanTarget_set)>0:
             humanTarget=humanTarget_set.first()
+            humanTarget.is_active=True
+            humanTarget.save()
         else:
             humanTarget=None
     else:
@@ -84,7 +93,7 @@ def updateAgent(request,*args,**kwargs):
     equipment_type=servertype_2_equip_type(server_force_type)
    # print('rootmap_vid:'+str(rootmap_vid)+' floor'+str(apartment_floor))
     agent_vid=vid
-    point3d= updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid)
+    point3d= updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid,is_agent=True)
     if whichteam==0: #红f方
         Agent=AgentRed
         agent=AgentRed.objects.filter(vid=vid)
@@ -93,9 +102,9 @@ def updateAgent(request,*args,**kwargs):
         agent=AgentBlue.objects.filter(vid=vid)
 
     if agent.count()>0:
-        updateAgentLocal(agent.first(),x,y,health,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget)
+        updateAgentLocal(agent.first(),azimuth,x,y,health,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget)
     else:
-        addAgent(whichteam,vid,x,y,health,type,weapon,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget)
+        addAgent(whichteam,vid,azimuth,x,y,health,type,weapon,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget)
 
 
     current_count= Agent.objects.all().count()
@@ -164,7 +173,7 @@ def updateEnemyTarget(request,*args,**kwargs):
 
     agent_vid = vid
   #  print('UpdateEnemy~~~~~~~~~~~~~~~~~~~~~~~~~~:float x:'+str(float_x)+' float height:'+str(float_height)+' z:' +str(float_z))
-    point3d = updateDynamicPoint3D( float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid)
+    point3d = updateDynamicPoint3D( float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid,is_agent=True)
     if whichteam==0:
         EnemyTarget=EnemyTargetOfBlue
     else:
@@ -194,7 +203,7 @@ def updateObstacleTarget(request,*args,**kwargs):
     rootmap_vid = int((request.POST.get('rootmap_vid')))
     apartment_floor = int((request.POST.get('apartment_floor')))
     agent_vid = vid
-    point3d = updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid)
+    point3d = updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid,is_agent=True)
     obstacleTarget= ObstacleTarget.objects.filter(vid=vid)
     if obstacleTarget.count()>0:
         updateObstacleTargetLocal(obstacleTarget.first(),health,x,y,point3d)
@@ -205,6 +214,82 @@ def updateObstacleTarget(request,*args,**kwargs):
             pass
 
     return  json_response(dict())
+
+from datetime import datetime
+import time
+from .building_params import *
+def initializeBuildingTarget():
+    addBuildingTargetLocal(**s_1_w_1)
+    addBuildingTargetLocal(**s_1_w_2)
+    addBuildingTargetLocal(**s_1_w_indoor)
+    addBuildingTargetLocal(**s_1_w_air)
+
+    addBuildingTargetLocal(**s_1_e_1)
+    addBuildingTargetLocal(**s_1_e_2)
+    addBuildingTargetLocal(**s_1_e_indoor_1)
+    addBuildingTargetLocal(**s_1_e_indoor_2)
+    addBuildingTargetLocal(**s_1_e_air)
+
+    addBuildingTargetLocal(**s_2_w_1)
+    addBuildingTargetLocal(**s_2_w_2)
+    addBuildingTargetLocal(**s_2_e_1)
+    addBuildingTargetLocal(**s_2_e_2)
+    addBuildingTargetLocal(**s_2_e_indoor)
+    addBuildingTargetLocal(**s_2_e_air)
+
+    addBuildingTargetLocal(**s_3_w_1)
+    addBuildingTargetLocal(**s_3_w_air)
+
+    addBuildingTargetLocal(**s_3_e_1)
+    addBuildingTargetLocal(**s_3_e_air)
+
+    addBuildingTargetLocal(**s_4_1)
+    addBuildingTargetLocal(**s_4_indoor_1)
+    addBuildingTargetLocal(**s_4_indoor_2)
+    addBuildingTargetLocal(**s_4_e_air)
+
+    addBuildingTargetLocal(**target_building)
+
+def addBuildingTargetLocal(vid,x,y,value,float_x,float_height,float_z,
+                           rootmap_vid,apartment_floor,capture_type,
+                           is_static,point3d_vid,stage,in_stage,
+                           whichTeam,distance_range,is_air_release,
+                           is_single_release,load_distance_range=20,thread_rate=0):
+    buildingTarget = BuildingTarget.objects.filter(whichTeam=whichTeam).filter(is_static=is_static).filter(vid=vid)
+
+
+    if buildingTarget.count() > 0:
+        pass
+    else:
+        if point3d_vid == -1:
+            point3d = updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, vid)
+        else:
+            point3d = Point3D.objects.all().get(vid=point3d_vid)
+        try:
+
+            addBuildingTarget(vid, x, y, value, point3d, capture_type, is_static,stage,in_stage,
+                              whichTeam,distance_range,is_air_release,is_single_release,load_distance_range,
+                              thread_rate)
+            time_end2 = datetime.now()
+
+        except IntegrityError as e:
+            pass
+
+def stepForwardStage(whichTeam,stage,filtered_buildings,stageBuildings=None):
+    if stage==TOTAL_STAGE:
+        if stageBuildings!=None:
+            return  stageBuildings
+        else:
+            return list(filtered_buildings)
+    else:
+        filtered_buildings.update(in_stage=False)
+        filtered_buildings= BuildingTarget.objects.filter(whichTeam=whichTeam + 1).filter(is_static=1).filter(stage=stage+1)
+        filtered_buildings.update(in_stage=True)
+        return list(filtered_buildings)
+
+
+def updateBuildingTargetLocal():
+    pass
 
 def updateBuildingTarget(request,*args,**kwargs):
 
@@ -220,19 +305,38 @@ def updateBuildingTarget(request,*args,**kwargs):
    apartment_floor = int((request.POST.get('apartment_floor')))
    capture_type=int((request.POST.get('capture_type')))
    is_static=True if int((request.POST.get('is_static')))==1 else False
-
+   point3d_vid=int((request.POST.get('point3d_vid')))
    agent_vid = vid
-   point3d = updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid)
 
-   buildingTarget=BuildingTarget.objects.filter(vid=vid).filter(is_static=is_static)
+   time_start=datetime.now()
+   time_end0=time_start
+   time_end1=time_start
+   if point3d_vid==-1:
+        point3d = updateDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor, agent_vid)
+        time_end0 = datetime.now()
+   else:
+       point3d=Point3D.objects.all().get(vid=point3d_vid)
+       time_end1 = datetime.now()
+
+   durn0 = (time_end0 - time_start).microseconds / 1000
+   durn1 = (time_end1 - time_start).microseconds / 1000
+   #print('--------------------buildingUpdateTime Update:' + str(durn0) + ' Get:' + str(durn1) + '------------------------')
+
+   buildingTarget=BuildingTarget.objects.filter(is_static=is_static).filter(vid=vid)
    if buildingTarget.count()>0:
+       time_end2 = datetime.now()
        pass
    else:
        try:
+
             addBuildingTarget(vid,x,y,value,point3d,capture_type,is_static)
+            time_end2 = datetime.now()
+
        except IntegrityError as e:
            pass
-
+   durn2 = (time_end2 - time_start).microseconds / 1000-max(durn1,durn0)
+   print('--------------------buildingUpdateTime Update:' + str(durn0) + ' Get:' + str(
+       durn1) + ' add:' + str(durn2) + '------------------------')
    return json_response(dict())
 
 
@@ -300,6 +404,138 @@ def updateDestination(request,*args,**kwargs):
     return json_response(data,isOk)
 
 ###############################以上是pythonServer调用
+
+
+from rules_project import param as rule_param
+from  . import params as local_param
+from django.db.models import Q
+def updateHospitalVid(stage):
+#     current_vid=STAGE_VIDS[stage-1]
+#     current_x_y=STAGE_X_Ys[stage-1]
+#     local_param.POINT_HOSPITAL_VID = current_vid
+#     rule_param.Hospital_pos = current_x_y
+#     rule_param.Hospital_vid = current_vid
+#     return current_vid,current_x_y
+      return TARGET_VID,TARGET_X_Y
+def get_min_max(variable,tolerance):
+
+    return  variable-tolerance,variable+tolerance
+def getStageBuildings(whichTeam):
+    filtered_buildings= BuildingTarget.objects.filter(whichTeam=whichTeam+1).filter(is_static=1)
+    test_building=filtered_buildings.filter(stage=1).first()
+
+    stage=1
+    while test_building.in_stage==False and stage<TOTAL_STAGE:
+        stage+=1
+        test_building=filtered_buildings.filter(stage=stage).first()
+    #此时，已经得到当前阶段，判断该阶段任务是否完成,若未完成，返回当前的building_target，否则
+    #更新当前阶段与下一阶段的building
+    filtered_buildings=filtered_buildings.filter(stage=stage)
+
+    ground_building_len=filtered_buildings.exclude(capture_type=AIR_DETECT_POINT)\
+        .exclude(capture_type=AIR_FIRE_POINT).exclude(capture_type=IND_FIRE_POINT).\
+        exclude(capture_type=IND_DETECT_POINT).count()
+    indoor_building_len=filtered_buildings.filter(Q(capture_type=IND_FIRE_POINT)|Q(capture_type=IND_DETECT_POINT)).count()
+    total_building_len=filtered_buildings.count()
+    air_building_len=total_building_len-ground_building_len-indoor_building_len
+
+    current_buildings=list(filtered_buildings)
+
+    current_vid,current_x_y= updateHospitalVid(stage)
+    if stage==TOTAL_STAGE:
+        return current_vid,current_x_y, current_buildings
+    #判断任务是否完成
+    if whichTeam==0:
+        Agent=AgentRed
+    else:
+        Agent=AgentBlue
+
+    current_building_len=0
+    Agent=Agent.objects.exclude(equipment_type=AIR_DETECT).exclude(equipment_type=AIR_FIRE).exclude(health__lte=0)
+    calculate_agent_num=Agent.count()
+    indoor_agent_num=Agent.filter(Q(equipment_type=IND_FIRE)|Q(equipment_type=IND_DETECT)).count()
+
+    qualified_num =int( QUALIFIED_RATES[stage - 1] * (total_building_len - air_building_len))
+
+    for building_target in current_buildings:
+        building_capture_type=building_target.capture_type
+        if building_capture_type==AIR_FIRE_POINT or building_capture_type==AIR_DETECT_POINT:
+           # current_building_len+=1
+            continue
+        if building_target.status==1:
+            current_building_len+=1
+            continue
+        if building_target.status==2:
+            current_building_len=qualified_num
+            break
+        float_x= building_target.point3d.float_x
+        float_height=building_target.point3d.float_height
+        float_z=building_target.point3d.float_z
+        distance_range=building_target.distance_range
+        thread_rate=building_target.thread_rate
+
+        min_x,max_x=get_min_max(float_x,distance_range)
+        min_height,max_height=get_min_max(float_height,distance_range)
+        min_z,max_z=get_min_max(float_z,distance_range)
+
+        agent_nums=  Agent.filter(Q(point3d__float_x__lte=max_x) & Q(point3d__float_x__gte=min_x)) \
+            .filter(Q(point3d__float_height__lte=max_height) & Q(point3d__float_height__gte=min_height))\
+            .filter(Q(point3d__float_z__lte=max_z)&Q(point3d__float_z__gte=min_z)).count()
+        # if thread_rate==0 and agent_nums>0:
+        #     building_target.status=1
+        #     building_target.save()
+        #     current_building_len+=1
+        #     continue
+        if thread_rate==0:
+            num_thread=1
+        else:
+            num_thread=int(calculate_agent_num*thread_rate)
+        accomplished=False
+        if agent_nums>=num_thread:
+           accomplished=True
+        else:
+            if (building_capture_type==IND_DETECT_POINT or building_capture_type==IND_FIRE_POINT) :
+                # print('==================buildingtarget_distance_range:'+str(building_target.distance_range)
+                #       +'agent num:'+str(agent_nums)+'=================================')
+                if indoor_agent_num==0:
+                   accomplished=True
+            else:
+                if calculate_agent_num-indoor_agent_num<num_thread:
+                    accomplished=True
+        if accomplished:
+            building_target.status = 1
+            building_target.save()
+            current_building_len += 1
+            continue
+    print('===================gathering_nums:' + str(current_building_len)+':'+str(qualified_num) + "=============================")
+    if current_building_len>=qualified_num:
+        #进入第二阶段,开始集合进入下一阶段
+        gathering_places=  list(filtered_buildings.filter(capture_type=ALL_TYPE))
+        gather_agent_num=0
+        for gathering_place in gathering_places:
+            if  gathering_place.status!=2:
+                gathering_place.status=2
+                gathering_place.save()
+            float_x=gathering_place.point3d.float_x
+            float_height=gathering_place.point3d.float_height
+            float_z=gathering_place.point3d.float_z
+            min_x,max_x=get_min_max(float_x,QUALIFIED_STAGE_GATHERING_DISTANCE[stage-1])
+            min_height,max_height=get_min_max(float_height,QUALIFIED_STAGE_GATHERING_DISTANCE[stage-1])
+            min_z,max_z=get_min_max(float_z,QUALIFIED_STAGE_GATHERING_DISTANCE[stage-1])
+            agent_num= Agent.filter(Q(point3d__float_x__lte=max_x) & Q(point3d__float_x__gte=min_x)) \
+            .filter(Q(point3d__float_height__lte=max_height) & Q(point3d__float_height__gte=min_height))\
+            .filter(Q(point3d__float_z__lte=max_z)&Q(point3d__float_z__gte=min_z)).count()
+            gather_agent_num+=agent_num
+
+        print('===================gathering_total_nums:'+str(gather_agent_num)+"=============================")
+        if gather_agent_num>=int(QUALIFIED_STAGE_GATHERING_RATES[stage-1]*calculate_agent_num):
+                return current_vid,current_x_y, stepForwardStage(whichTeam,stage,filtered_buildings,current_buildings)
+        else:
+            return current_vid,current_x_y, gathering_places
+    else:
+        #仍然在本阶段停留
+        return current_vid,current_x_y, current_buildings
+
 def updateDestinationLocal(whichTeam):
     if whichTeam==0:
         Agent=AgentRed
@@ -314,43 +550,100 @@ def updateDestinationLocal(whichTeam):
         agent_list=list(Agent.objects.all().filter(isControlledByAi=True))
         enemytarget_list=list(EnemyTarget.objects.all().filter(isVisible__exact=True))
         obstacle_list=list(ObstacleTarget.objects.all())
-        building_list=list(BuildingTarget.objects.all().filter(is_static=1))
+
+        if STAGE_SPLIT:
+           hospital_vid,hospital_x_y,building_list=getStageBuildings(whichTeam)
+        else:
+           building_list=list(BuildingTarget.objects.all().filter(is_static=1))
+           hospital_vid=TARGET_VID
+           hospital_x_y=TARGET_X_Y
 
         agent_pos_ls, visible_enemy_pos_ls, building_target_ls,\
         obstacle_target_ls, enemy_target_ls, agent_ls,sorted_building_list=data_process(agent_list,enemytarget_list,obstacle_list,building_list)
         isOk = False
+
         if len(building_target_ls) > 0:
+            print("start Update destination by AI Control")
             isOk, data = ShatteredAlg(whichTeam, agent_pos_ls, visible_enemy_pos_ls,
                                       building_target_ls, obstacle_target_ls, enemy_target_ls, agent_ls,
-                                      enemytarget_list, obstacle_list, building_list, agent_list, [])
+                                      enemytarget_list, obstacle_list, building_list, agent_list,
+                                      hospital_vid,hospital_x_y)
 
     else:
        # agent_list_iter = Agent.objects.all().filter(isControlledByAi=False).filter(is_human_target_changed=1)
-        enemytarget_list = list(EnemyTarget.objects.all().filter(isVisible__exact=True))
-        obstacle_list = list(ObstacleTarget.objects.all())
-        building_list = list(BuildingTarget.objects.all().filter(is_static=0))
+      #  enemytarget_list = list(EnemyTarget.objects.all().filter(isVisible__exact=True))
+        time0=datetime.now()
+        enemytarget_list=[]
+       # obstacle_list = list(ObstacleTarget.objects.all())
+
+        obstacle_list=[]
+        building_list = list(BuildingTarget.objects.all().filter(is_static=0).filter(is_active=True))
         agent_pos_ls, visible_enemy_pos_ls, building_target_ls, \
         obstacle_target_ls, enemy_target_ls, agent_ls,sorted_building_list = data_process([], enemytarget_list, obstacle_list,
-                                                                     building_list)
+                                                                         building_list)
+
         isOk = False
         data=list()
-        for building_target,building in zip(building_target_ls,sorted_building_list):
+        if len(sorted_building_list)>0:
+            print("start Update destination by Human Control")
+        for building in sorted_building_list:
+
             if whichTeam==0: # REd
                 agent_list=list(building.agent_red_set.all())
-                agent_pos_ls,agent_ls=agent_process(agent_list)
+                #agent_pos_ls,agent_ls=agent_process(agent_list)
             else:
                 agent_list=list(building.agent_blue_set.all())
-                agent_pos_ls, agent_ls = agent_process(agent_list)
-            isOk, data_part = ShatteredAlg(whichTeam, agent_pos_ls, visible_enemy_pos_ls,
-                                      [building_target], obstacle_target_ls, enemy_target_ls, agent_ls,
-                                      enemytarget_list, obstacle_list, building_list, agent_list, [])
+                #agent_pos_ls, agent_ls = agent_process(agent_list)
+            #print('~~~~~~~~~Len of Agent:'+str(len(agent_list)))
+            # isOk, data_part = ShatteredAlg(whichTeam, agent_pos_ls, visible_enemy_pos_ls,
+            #                           [building_target], obstacle_target_ls, enemy_target_ls, agent_ls,
+            #                           enemytarget_list, obstacle_list, building_list, agent_list, [])
+            if len(agent_list)==0:
+                building.is_active=False
+                building.save()
+            isOk,data_part=HumanAlg(whichTeam,agent_list,building)
+
             if isOk:
                 data+=data_part
 
+        time1 = datetime.now()
+        durn1 = (time1 - time0).microseconds // 1000
 
+        print("----------------------duration 1 cost:" + str(durn1) + " milliseconds-----------------------")
+
+
+
+
+        isOK=True
 
 
     return data, isOk
+
+def HumanAlg(whichTeam,agent_list,building_unit):
+    destinations = list()
+    isOk = True
+    for agent in agent_list:
+        agent_dict = dict()
+        print(' agent vid:'+str(agent.vid)+' target vid:'+str(building_unit.vid))
+        try:
+            isOk, is_in_map, point3d,my_agent = transform_destination(whichTeam, agent.vid, building_unit.vid, [],
+                        [], [],[], \
+                        human_target_point=building_unit.point3d,para_agent=agent)
+            # print('get_vid:' + str(point3d.vid) + '--------------------------------')
+            if isOk == False:
+                #   print('######################################## okok2')
+                break
+            agent_dict=get_agent_dict(agent.vid,is_in_map,point3d,my_agent)
+            destinations.append(agent_dict)
+        except Point3D.DoesNotExist:
+            print('Error agent:id' + str(agent.vid) + ' agent vid:' + str(agent))
+            isOk=False
+            break
+
+    if isOk == False:
+        destinations = list()
+
+    return isOk,destinations
 
 def agent_process(agent_list):
     agent_pos_ls = list()
@@ -360,9 +653,9 @@ def agent_process(agent_list):
             continue
         if agent.x < 0 or agent.x >= Map_Width or agent.y < 0 or agent.y >= Map_Length:
             continue
-        if not agent.isControlledByAi:
-            # agent_human_ls.append([agent.vid])
-            continue
+        # if not agent.isControlledByAi:
+        #     # agent_human_ls.append([agent.vid])
+        #     continue
         agent_pos_ls.append([agent.x, agent.y])
         agent_ls.append(
             [equipment_type_2_int[agent.equipment_type], agent.vid, agent.x, agent.y, agent.vid, agent.health,
@@ -422,33 +715,45 @@ def get_agent_dict(vid,is_in_map,point3d,my_agent):
         agent_dict['is_in_map'] = False
     agent_dict['root_map_id'] = point3d.self_apartment.root_map.vid
     # 改进一下A *
-    if point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 73 and my_agent.y >= 87) or (
-            point3d.int_y >= 87 and my_agent.y <= 73):
-        agent_dict['int_x'] = A_STAR_MIDDLE_X
-        agent_dict['int_y'] = A_STAR_MIDDLE_Y
-    elif point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 54 and my_agent.y >= 60) or (
-            point3d.int_y >= 60 and my_agent.y <= 54):
-        agent_dict['int_x'] = A_STAR_LEFT_X
-        agent_dict['int_y'] = A_STAR_LEFT_Y
-    elif point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 26 and my_agent.y >= 35) or (
-            point3d.int_y >= 35 and my_agent.y <= 26):
-        agent_dict['int_x'] = A_STAR_LEFT_2_X
-        agent_dict['int_y'] = A_STAR_LEFT_2_Y
-
-    else:
-        agent_dict['int_x'] = point3d.int_x
-        agent_dict['int_y'] = point3d.int_y
+    # if point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 73 and my_agent.y >= 87) or (
+    #         point3d.int_y >= 87 and my_agent.y <= 73):
+    #     agent_dict['int_x'] = A_STAR_MIDDLE_X
+    #     agent_dict['int_y'] = A_STAR_MIDDLE_Y
+    # elif point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 54 and my_agent.y >= 60) or (
+    #         point3d.int_y >= 60 and my_agent.y <= 54):
+    #     agent_dict['int_x'] = A_STAR_LEFT_X
+    #     agent_dict['int_y'] = A_STAR_LEFT_Y
+    # elif point3d.self_apartment.root_map.vid == 1 and (point3d.int_y <= 26 and my_agent.y >= 35) or (
+    #         point3d.int_y >= 35 and my_agent.y <= 26):
+    #     agent_dict['int_x'] = A_STAR_LEFT_2_X
+    #     agent_dict['int_y'] = A_STAR_LEFT_2_Y
+    #
+    # else:
+    angle_horizon,angel_range_horizon,angle_vertical,angel_range_vertical= \
+        updateAgentRotation(point3d,my_agent)
+    #print("=========================="+str(angle_horizon)+"=========================")
+    agent_dict['angle_horizon']=angle_horizon
+    agent_dict['angel_range_horizon']=angel_range_horizon
+    agent_dict['angle_vertical']=angle_vertical
+    agent_dict['angel_range_vertical']=angel_range_vertical
+    agent_dict['int_x'] = point3d.int_x
+    agent_dict['int_y'] = point3d.int_y
     agent_dict['floor'] = point3d.self_apartment.floor
 
     return agent_dict
 
 ###############智能体的代码在这里添加
+
+
 def ShatteredAlg(whichTeam,agent_pos_ls,visible_enemy_pos_ls,building_target_ls,obstacle_target_ls,\
-                 enemy_target_ls,agent_ls,enemytarget_list,obstacle_list,building_list,my_agent_list,human_target_list):
+                 enemy_target_ls,agent_ls,enemytarget_list,obstacle_list,building_list,my_agent_list,
+                 hospital_vid,hospital_x_y):
     destinations=list()
     isOk=True
     if len(agent_pos_ls)>0:
-        dest_ls=make_decision(agent_pos_ls,visible_enemy_pos_ls,agent_ls,building_target_ls,obstacle_target_ls,enemy_target_ls)
+        dest_ls=make_decision(agent_pos_ls,visible_enemy_pos_ls,
+                              agent_ls,building_target_ls,obstacle_target_ls,enemy_target_ls,
+                              hospital_vid,hospital_x_y)
         for agent in dest_ls:
             agent_dict = dict()
             print(' agent vid:'+str(agent[0])+' target vid:'+str(agent[3]))
@@ -480,16 +785,16 @@ def updateHumanTargetLocal(humanTarget,human_target_x, human_target_z, human_tar
     humanTarget.point3d=point3d
     humanTarget.save()
 
-def  addHumanTarget(agent_vid,vid,whichTeam, human_target_x,human_target_z,human_target_height,point3d):
-    humanTarget=HumanTarget()
-    humanTarget.agent_vid=agent_vid
-    humanTarget.vid=vid
-    humanTarget.whichTeam=whichTeam
-    humanTarget.human_target_x=human_target_x
-    humanTarget.human_target_z=human_target_z
-    humanTarget.human_target_height=human_target_height
-    humanTarget.point3d=point3d
-    humanTarget.save()
+# def  addHumanTarget(agent_vid,vid,whichTeam, human_target_x,human_target_z,human_target_height,point3d):
+#     humanTarget=HumanTarget()
+#     humanTarget.agent_vid=agent_vid
+#     humanTarget.vid=vid
+#     humanTarget.whichTeam=whichTeam
+#     humanTarget.human_target_x=human_target_x
+#     humanTarget.human_target_z=human_target_z
+#     humanTarget.human_target_height=human_target_height
+#     humanTarget.point3d=point3d
+#     humanTarget.save()
 
 def updateEnemyTargetLocal(enemyTarget,x,y,health,isVisible,point3d,pos_type):
     enemyTarget.x=x
@@ -548,7 +853,7 @@ def initializeMap(request,*args,**kwargs):
     # addRootMap(**fz1_map_params)
     #addRootMap(**fz2_map_params)
     # addRootMap(**fz3_map_params)
-    addRootMap(**TVStation_map_params)
+   # addRootMap(**TVStation_map_params)
     addRootMap(**goverment_map_params)
     globalmap=RootMap.objects.get(vid=1)
     addApartment(root_map=globalmap,**apartment_globalmap_floor_1)
@@ -572,7 +877,7 @@ def initializeMap(request,*args,**kwargs):
 
     #TVStation还没有渲染好
 
-    goverment=RootMap.objects.get(vid=7)
+    goverment=RootMap.objects.get(vid=6)
     addApartment(root_map=goverment,**apartment_goverment_floor_1)
     addApartment(root_map=goverment, **apartment_goverment_floor_2)
     addApartment(root_map=goverment, **apartment_goverment_floor_3)
@@ -586,6 +891,8 @@ def initializeMap(request,*args,**kwargs):
     # 加一个dynamicpoint3d 作为医院的点
     #updateDynamicPoint3D(**dynamic_hopital_point)
     initPoint3dPart()
+    initialize_air_map()
+    initializeBuildingTarget()
     data=dict()
     return  json_response(data)
 
@@ -635,6 +942,30 @@ def updateApartmentData(request,*args,**kwargs):
 
 
 
+def multi_agent_path_planning(request,*args,**kwargs):
+    #处理发来的数据，不可行区域用附近点代替，并在最后包含原点
+    inputAgents=request.POST.get('inputAgents')
+    print(inputAgents)
+    destination_x=float(request.POST.get('destination_x'))
+    destination_y=float(request.POST.get('destination_y'))
+    destination_z=float(request.POST.get('destination_z'))
+    taskType=int(request.POST.get('taskType'))
+    whichTeam=int(request.POST.get('whichTeam'))
+
+    agent_dict= json.loads(inputAgents)
+    agentList=agent_dict['agentList']
+    agent_pos_list,multi_agent_poses,end_coord= process_multi_agent_poses(agentList,[destination_x,destination_y,destination_z])
+
+    #TODO which Team
+    result,agents_path= test_cbs_formation(len(agentList),multi_agent_poses,agent_pos_list,taskType,end_coord)
+    if result:
+        agents_path_json=get_agents_path_json(agents_path,destination_y)
+
+        data=agents_path_json
+    else:
+        data=list()
+    return json_response(data,result=result)
+
 ##########################################处理离散化地图的模块
 #公共部分
 #智能体
@@ -644,12 +975,20 @@ def enableNumberCapture():
 def disableNumberCapture():
     pass
 
-def addAgent(whichTeam,vid,x,y,health,type,weapon,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget):
+def addAgent(whichTeam,vid,azimuth,x,y,health,type,weapon,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget):
     if whichTeam==0:
         agent=AgentRed()
     else:
         agent=AgentBlue()
 
+    agent.destination_angle_horizon=0
+
+    agent.destination_angle_vertical=0
+
+
+    agent.current_angle_horizon=azimuth
+
+    agent.current_angle_horizon = azimuth
     agent.vid=vid
     agent.x=x
     agent.y=y
@@ -665,9 +1004,19 @@ def addAgent(whichTeam,vid,x,y,health,type,weapon,point3d,equipment_type,is_cont
 
 
 
-def updateAgentLocal(agent,x,y,health,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget):
+def updateAgentLocal(agent,azimuth,x,y,health,point3d,equipment_type,is_controlled_by_ai,is_human_target_changed,humanTarget):
     agent.x=x
     agent.y=y
+    if agent.destination_angle_horizon==None:
+        agent.destination_angle_horizon=0
+    if agent.destination_angle_vertical==None:
+        agent.destination_angle_vertical=0
+
+    if agent.current_angle_horizon==None:
+        agent.current_angle_horizon=azimuth
+    if agent.destination_angle_horizon==None:
+        agent.current_angle_horizon = azimuth
+
     agent.health=health
     agent.point3d=point3d
     agent.equipment_type=equipment_type
@@ -688,7 +1037,9 @@ def searchAgent(agent):
     pass
 
 #目标建筑
-def addBuildingTarget(vid,x,y,value,point3d,capture_type,is_static):
+def addBuildingTarget(vid,x,y,value,point3d,capture_type,is_static,stage=0,in_stage=False,
+                           whichTeam=0,distance_range=20,is_air_release=False,
+                           is_single_release=False,load_distance_range=20,thread_rate=0):
     buildingTarget = BuildingTarget()
     buildingTarget.vid=vid
     buildingTarget.x =x
@@ -697,6 +1048,14 @@ def addBuildingTarget(vid,x,y,value,point3d,capture_type,is_static):
     buildingTarget.point3d=point3d
     buildingTarget.capture_type=capture_type
     buildingTarget.is_static=is_static
+    buildingTarget.stage=stage
+    buildingTarget.in_stage=in_stage
+    buildingTarget.whichTeam=whichTeam
+    buildingTarget.distance_range=distance_range
+    buildingTarget.is_air_release=is_air_release
+    buildingTarget.is_single_release=is_single_release
+    buildingTarget.load_distance_range=load_distance_range
+    buildingTarget.thread_rate=thread_rate
     buildingTarget.save()
 
 def removeBuildingTarget():

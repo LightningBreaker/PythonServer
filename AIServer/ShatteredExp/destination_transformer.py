@@ -46,17 +46,27 @@ def get_end_point(target_vid,enemy_target_list,obstacle_list,building_list,my_ag
 
 #主函数
 #start_point:is_in_map?True:False, ，
-def transform_destination(which_team,vid,target_vid,enemy_target_list,obstacle_list,building_list,my_agent_list,human_target_point=None):
-    start_point,my_agent=get_start_point(which_team,vid)
+def transform_destination(which_team,vid,target_vid,enemy_target_list,obstacle_list,building_list,my_agent_list,human_target_point=None
+                          ,para_agent=None):
+
+    if para_agent !=None:
+        start_point, my_agent=para_agent.point3d,para_agent
+    else:
+        start_point,my_agent=get_start_point(which_team,vid)
     # if start_point==None:
     #     print('Its None:'+start_point)
     # else:
     #     print('Its None:' +str(start_point.float_x)+','+str(start_point.float_z)+')')
    # print('start_point_vid:'+str(start_point.vid)+' ######################## vid:'+str(vid))
+
     if human_target_point!=None:
         end_point=human_target_point
     else:
         end_point=get_end_point(target_vid,enemy_target_list,obstacle_list,building_list,my_agent_list)
+
+    if my_agent !=None and (my_agent.equipment_type==AIR_FIRE or my_agent.equipment_type==AIR_DETECT or start_point.float_height>=48):
+            return True,False,transform_in_air(start_point,end_point),my_agent
+
 
     if start_point.is_in_map:
         if start_point.self_apartment.root_map.vid == end_point.self_apartment.root_map.vid:
@@ -127,7 +137,25 @@ def transform_destination(which_team,vid,target_vid,enemy_target_list,obstacle_l
         else:
             return  True,False,start_point.down_point,my_agent
 
+from math import sqrt
+TOLERANCE_DISTANCE=10
+def transform_in_air(start_point,end_point):
+    stop_point=end_point
+    while stop_point.down_point!=None and stop_point.is_air_stop==False:
+        stop_point=stop_point.down_point
+        if stop_point.vid==end_point.vid:
+            break
 
+    delta_distance= sqrt((start_point.float_x - stop_point.float_x) ** 2+(start_point.float_z-stop_point.float_z)**2)
+
+    if delta_distance<=TOLERANCE_DISTANCE and stop_point.down_point!=None:
+        stop_point.is_air_stop=False
+        stop_point.save()
+        stop_point.down_point.is_air_stop=True
+        stop_point.down_point.save()
+        stop_point=stop_point.down_point
+
+    return stop_point
 
 
 
@@ -166,7 +194,7 @@ def transform_float_pos_to_int(root_map,float_x,float_z):
     return  int_x,int_y
 ##静态添加一个Point3D
 def addStaticPoint3D(self_root_map_vid,self_floor,is_up_point_of_apartment,is_down_point_of_apartment, \
-                     vid,is_in_map,is_junction,connected_root_map_vid,connected_floor,float_x,float_z,float_height,agent_vid=-1):
+                     vid,is_in_map,is_junction,connected_root_map_vid,connected_floor,float_x,float_z,float_height,agent_vid=-1,is_air_stop=False):
     points_static= Point3D.objects.filter(vid=vid)
     if len(points_static)>0:
         return points_static.first()
@@ -191,6 +219,7 @@ def addStaticPoint3D(self_root_map_vid,self_floor,is_up_point_of_apartment,is_do
     point3d.agent_vid=agent_vid
     point3d.is_up_point_of_apartment=is_up_point_of_apartment
     point3d.is_down_point_of_apartment=is_down_point_of_apartment
+    point3d.is_air_stop=is_air_stop
     point3d.save()
 
     if is_up_point_of_apartment:
@@ -202,35 +231,55 @@ def addStaticPoint3D(self_root_map_vid,self_floor,is_up_point_of_apartment,is_do
     return point3d
     #TODO 添加apartment up 和apartment down
 
-
+from datetime import datetime
+import time
 #TODO 保证vid要唯一
-def updateDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid=-1):
-   # print('EnemyRootMap vid:'+str(rootmap_vid)+' Enemy Floor:'+str(apartment_floor))
-   #  if agent_vid==1850013:
-   #    print('Agent Vid:'+str(agent_vid)+'Enemy Float x:'+str(float_x)+'Enemy Float z:'+str(float_z)+' Enemy Float Height:'+str(float_height))
-    points= Point3D.objects.exclude(agent_vid=-1).filter(agent_vid=agent_vid)
+def updateDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid=-1,is_agent=False):
+
+    time_start = datetime.now()
+    time_end0 = time_start
+    time_end1 = time_start
+    time_end2 = time_start
+    time_end3 = time_start
+    points= Point3D.objects.exclude(agent_vid=-1).filter(is_agent=is_agent).filter(agent_vid=agent_vid)
+    # time_end1 = datetime.now()
     if len(points)>0:
        # points.delete()
-        return addDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor,
-                                 agent_vid,points.first())
+        ret_point= addDynamicPoint3D(float_x, float_height, float_z, rootmap_vid, apartment_floor,
+                                 agent_vid,points.first(),is_agent)
+        time_end0 = datetime.now()
     elif agent_vid!=-1:
-        return addDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid)
+        ret_point= addDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid,is_agent=is_agent)
+        time_end1 = datetime.now()
     else: #agent_vid=-1
          points= Point3D.objects.filter(float_x=float_x).filter(float_z=float_z).filter(float_height=float_height)
          if len(points)>0:
-             return  points.first()
+             ret_point=  points.first()
+             time_end2 = datetime.now()
          else:
-             return addDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid)
+             ret_point= addDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid,is_agent)
+             time_end3 = datetime.now()
+
+    durn0 = (time_end0 - time_start).microseconds // 1000
+    durn1 = (time_end1 - time_start).microseconds // 1000
+    durn2 = (time_end2 - time_start).microseconds // 1000
+    durn3 = (time_end3 - time_start).microseconds // 1000
+    print('--------------------updateDynamicPoint3D 0:' + str(durn0) + ' 1:' + str(durn1) + '------------------------'+
+          ' 2:'+str(durn2)+' 3:'+str(durn3))
+    return  ret_point
 
 
 
-def addDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid=-1,point3d=None):
+
+def addDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,agent_vid=-1,point3d=None,is_agent=False):
+    time_start0=datetime.now()
     if point3d==None:
         point3d = Point3D()
     rootmap = RootMap.objects.all().get(vid=rootmap_vid)
     apartment = rootmap.apartment_set.get(floor=apartment_floor)
     point_vid,point_static=getStaticPointFromRequest(apartment,float_x,float_z,float_height)
-
+    time_end0 = datetime.now()
+   # print('-------------------------addDynamic Duration:'+str((time_end0-time_start0).microseconds//1000))
     if point_vid!=-1:
 
         #point_static=Point3D.objects.get(vid=point_vid)
@@ -278,11 +327,18 @@ def addDynamicPoint3D(float_x,float_height,float_z,rootmap_vid,apartment_floor,a
     point3d.int_x=int_x
     point3d.int_y=int_y
     point3d.agent_vid=agent_vid
+    point3d.is_agent=is_agent
 
     try:
         point3d.save()
     except IntegrityError:
-        return None
+        filtered_point3d=Point3D.objects.filter(float_x=float_x).filter(float_height=float_height).\
+            filter(float_z=float_z).filter(agent_vid=agent_vid)
+        if filtered_point3d.count()>0:
+            return filtered_point3d.first()
+
+        else:
+            return None
     return  point3d
     #TODO 增加一个dynamic point
 

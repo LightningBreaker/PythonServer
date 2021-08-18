@@ -72,9 +72,9 @@ point_global_to_hospital_2={'self_root_map_vid':1,
                         'is_junction':True,
                         'connected_root_map_vid':2,
                         'connected_floor':1,
-                        'float_x':-45,
-                        'float_z':57.8,
-                        'float_height':0,
+                        'float_x':-40,
+                        'float_z':60,
+                        'float_height':0.4,
                         'agent_vid':-1}
 
 
@@ -89,9 +89,9 @@ point_hostpital_floor_1_down={'self_root_map_vid':2,
                         'is_junction':True,
                         'connected_root_map_vid':1,
                         'connected_floor':1,
-                        'float_x':-47.6,
-                        'float_z':57.8,
-                        'float_height':0.6,
+                        'float_x':-49.04,
+                        'float_z':57.71,
+                        'float_height':1,
                         'agent_vid':-1}
 
 point_hostpital_floor_1_up={'self_root_map_vid':2,

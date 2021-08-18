@@ -28,6 +28,18 @@ class AgentBlue(models.Model):
     is_human_target_changed=models.BooleanField(verbose_name='是否更新目的地',default=False)
     target_building=models.ForeignKey('BuildingTarget',verbose_name='指定目的地',blank=True,null=True,related_name='agent_blue_set',on_delete=models.CASCADE)
 
+    #
+    load_ability=models.BooleanField(verbose_name='是否能装载飞机',default=False)
+
+    # 角度变换
+    destination_angle_horizon = models.FloatField(verbose_name='目标角度', blank=True, null=True)
+    current_angle_horizon = models.FloatField(verbose_name='当前角度', blank=True, null=True)
+
+    destination_angle_vertical = models.FloatField(verbose_name='目标角度', blank=True, null=True)
+    current_angle_vertical = models.FloatField(verbose_name='当前角度', blank=True, null=True)
+    angel_range_horizon = models.FloatField(verbose_name='旋转角度范围', default=45)
+    angel_range_vertical = models.FloatField(verbose_name='旋转角度范围', default=30)
+
 
 class AgentRed(models.Model):
     vid = models.IntegerField(verbose_name="agent唯一编号",unique=True)
@@ -43,6 +55,17 @@ class AgentRed(models.Model):
     is_human_target_changed = models.BooleanField(verbose_name='是否更新目的地', default=False)
     target_building = models.ForeignKey('BuildingTarget',verbose_name='指定目的地', blank=True, null=True, related_name='agent_red_set',
                                         on_delete=models.CASCADE)
+    load_ability = models.BooleanField(verbose_name='是否能装载飞机', default=False)
+
+    # 角度变换
+    destination_angle_horizon = models.FloatField(verbose_name='目标角度', blank=True, null=True)
+    current_angle_horizon = models.FloatField(verbose_name='当前角度', blank=True, null=True)
+
+    destination_angle_vertical = models.FloatField(verbose_name='目标角度', blank=True, null=True)
+    current_angle_vertical = models.FloatField(verbose_name='当前角度', blank=True, null=True)
+    angel_range_horizon = models.FloatField(verbose_name='旋转角度范围', default=30)
+    angel_range_vertical = models.FloatField(verbose_name='旋转角度范围', default=20)
+
 
 class NumberCapture(models.Model):
     totalRed=models.IntegerField(verbose_name="红方总数",default=0)
@@ -87,6 +110,25 @@ class BuildingTarget(models.Model):
     point3d = models.ForeignKey('Point3D', on_delete=models.CASCADE,null=True,blank=True)
     capture_type=models.IntegerField(verbose_name='夺控点的类型',default=7)
     is_static=models.BooleanField(verbose_name='是否为静态夺控点',default=True)
+    is_active=models.BooleanField(verbose_name='是不是新节点',default=False)
+
+    stage=models.IntegerField(verbose_name='推演阶段',default=1)
+    in_stage=models.IntegerField(verbose_name='在这个阶段',default=False)
+    #1红方 2 蓝方 0 不管
+    whichTeam=models.IntegerField(verbose_name='属于哪一方的智能体',default=0)
+    distance_range=models.FloatField(verbose_name='单兵达标距离',default=5)
+    is_air_release=models.BooleanField(verbose_name='是否是飞机释放点',default=False)
+    is_single_release=models.BooleanField(verbose_name='是否为下车点',default=False)
+
+    is_ready_to_load=models.BooleanField(verbose_name='是否准备装载',default=False)
+    is_ready_to_left=models.BooleanField(verbose_name='是否准备离开',default=False)
+
+    load_distance_range=models.FloatField(verbose_name='装载范围',default=20)
+
+    thread_rate=models.FloatField(verbose_name='到达率',default=0)
+
+    #0是未完成 1是已经完成 2是该阶段结束
+    status=models.IntegerField(verbose_name='是否完成',default=0)
 
 class ObstacleTarget(models.Model):
     vid=models.IntegerField(verbose_name="障碍物唯一编号",unique=True)
@@ -153,6 +195,10 @@ class Point3D(models.Model):
     agent_vid=models.IntegerField(verbose_name='假设是agent的位置，则传入agent的id',default=-1)
 
     is_static=models.BooleanField(verbose_name='是否为静态的点',default=True)
+
+    is_air_stop=models.BooleanField(verbose_name='是否为当前驻留点',default=False)
+
+    is_agent=models.BooleanField(verbose_name='是否为装备节点',default=False)
     class Meta:
         unique_together = ("float_x", "float_height","float_z",'agent_vid')
 
